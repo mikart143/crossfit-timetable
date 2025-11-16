@@ -96,7 +96,7 @@ Returns the CrossFit timetable as an iCal file for calendar import. (Authenticat
 - Query parameter: `?token=<your-token>`
 
 **Query Parameters:**
-- `start_date` (optional): Start date in YYYY-MM-DD format (must be a Monday)
+- `weeks` (optional): Number of weeks to include (1-6, default 1)
 - `token` (optional): API token (alternative to Authorization header)
 
 **Response:** iCal (.ics) file download
@@ -122,8 +122,8 @@ curl -H "Authorization: Bearer your-token-here" -o crossfit.ics http://localhost
 # Download iCal file (query parameter)
 curl -o crossfit.ics "http://localhost:8000/ical?token=your-token-here"
 
-# Download specific week's iCal (query parameter)
-curl -o crossfit.ics "http://localhost:8000/ical?start_date=2025-11-11&token=your-token-here"
+# Download next 2 weeks' iCal (query parameter)
+curl -o crossfit.ics "http://localhost:8000/ical?weeks=2&token=your-token-here"
 ```
 
 ## API Documentation
@@ -183,4 +183,4 @@ crossfit-timetable/
 
 ## License
 
-[Add your license here]
+MIT
