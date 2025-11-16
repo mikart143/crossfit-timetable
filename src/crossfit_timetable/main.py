@@ -12,8 +12,7 @@ from crossfit_timetable.settings import settings
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -22,7 +21,7 @@ app = FastAPI(
     description="API for CrossFit 2 Rzeszów timetable data",
     version="1.0.0",
     openapi_url="/openapi.json" if settings.enable_swagger else None,
-    docs_url="/docs" if settings.enable_swagger else None
+    docs_url="/docs" if settings.enable_swagger else None,
 )
 
 scraper = CrossfitScraper()
@@ -34,7 +33,9 @@ security = HTTPBearer(auto_error=False)  # Make it optional
 
 def verify_token(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
-    token: Optional[str] = Query(None, description="API token (alternative to Authorization header)")
+    token: Optional[str] = Query(
+        None, description="API token (alternative to Authorization header)"
+    ),
 ):
     """Verify the provided token against the configured auth token.
     Accepts token via Bearer token in Authorization header or as query parameter.
@@ -53,16 +54,19 @@ def verify_token(
 
     return provided_token
 
+
 @app.get("/healthz/ready")
 async def healthz_ready():
     """Health check endpoint."""
     return {"status": "ok"}
 
+
 @app.get("/healthz/live")
 async def healthz_live():
     """Liveness check endpoint."""
-    
+
     return {"status": "ok"}
+
 
 @app.get("/")
 async def root():
@@ -71,15 +75,17 @@ async def root():
         "message": "CrossFit Timetable API",
         "endpoints": {
             "/timetable": "Get timetable data as JSON",
-            "/ical": "Download timetable as iCal file"
-        }
+            "/ical": "Download timetable as iCal file",
+        },
     }
 
 
 @app.get("/timetable", response_model=List[ClassItem])
 async def get_timetable(
-    start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD, must be a Monday)"),
-    token: str = Depends(verify_token)
+    start_date: Optional[str] = Query(
+        None, description="Start date (YYYY-MM-DD, must be a Monday)"
+    ),
+    token: str = Depends(verify_token),
 ):
     """Get the CrossFit timetable data as JSON."""
     try:
@@ -88,7 +94,9 @@ async def get_timetable(
             try:
                 target_date = date.fromisoformat(start_date)
             except ValueError:
-                raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+                raise HTTPException(
+                    status_code=400, detail="Invalid date format. Use YYYY-MM-DD"
+                )
 
         classes = await scraper.fetch_timetable(target_date)
         return classes
@@ -102,7 +110,7 @@ async def get_timetable(
 @app.get("/ical", response_class=PlainTextResponse)
 async def get_ical(
     weeks: int = Query(1, ge=1, le=6, description="Number of weeks to include (1-6)"),
-    token: str = Depends(verify_token)
+    token: str = Depends(verify_token),
 ):
     """Get the CrossFit timetable as an iCal file."""
     try:
@@ -118,14 +126,14 @@ async def get_ical(
             raise HTTPException(status_code=404, detail="No classes found")
 
         # Generate iCal content
-        ical_content = exporter.generate_ical_content(all_classes).decode('utf-8')
+        ical_content = exporter.generate_ical_content(all_classes).decode("utf-8")
 
         return PlainTextResponse(
             content=ical_content,
             media_type="text/calendar",
             headers={
                 "Content-Disposition": "attachment; filename=crossfit_timetable.ics"
-            }
+            },
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

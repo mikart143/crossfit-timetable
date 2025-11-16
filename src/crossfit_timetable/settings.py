@@ -6,9 +6,9 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables with APP_ prefix."""
 
     model_config = SettingsConfigDict(
-        env_prefix="APP_", 
-        case_sensitive=False, 
-        env_file=".env" if Path(".env").exists() else None
+        env_prefix="APP_",
+        case_sensitive=False,
+        env_file=".env" if Path(".env").exists() else None,
     )
 
     # Base URL for the CrossFit timetable scraper
@@ -22,7 +22,6 @@ class Settings(BaseSettings):
 
     # Enable Swagger UI
     enable_swagger: bool
-
 
 
 # Create a global settings instance

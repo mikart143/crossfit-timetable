@@ -23,7 +23,7 @@ class TestCrossfitScraper:
     def test_get_valid_monday_none(self):
         """Test get_valid_monday with None returns current week's Monday."""
         # Arrange
-        with patch('crossfit_timetable.scraper.datetime') as mock_datetime:
+        with patch("crossfit_timetable.scraper.datetime") as mock_datetime:
             mock_datetime.now.return_value = datetime(2025, 11, 11, 12, 0, 0)
             mock_datetime.combine = datetime.combine
             mock_datetime.min.time.return_value = datetime.min.time()
@@ -58,12 +58,14 @@ class TestCrossfitScraper:
     def test_get_valid_monday_too_old(self):
         """Test get_valid_monday raises error for dates more than 2 weeks ago."""
         # Arrange
-        with patch('crossfit_timetable.scraper.datetime') as mock_datetime:
+        with patch("crossfit_timetable.scraper.datetime") as mock_datetime:
             mock_datetime.now.return_value = datetime(2025, 11, 11, 12, 0, 0)
             old_monday = date(2025, 10, 27)  # More than 2 weeks before Nov 11
 
             # Act & Assert
-            with pytest.raises(ValueError, match="Date cannot be more than 2 weeks in the past"):
+            with pytest.raises(
+                ValueError, match="Date cannot be more than 2 weeks in the past"
+            ):
                 CrossfitScraper.get_valid_monday(old_monday)
 
     def test_parse_time_range_valid(self, scraper):
@@ -116,26 +118,28 @@ class TestCrossfitScraper:
                 event_name="WOD",
                 coach="Tomasz Nowosielski",
                 duration_min=60,
-                source_url="https://crossfit2-rzeszow.cms.efitness.com.pl/kalendarz-zajec?day=2025-11-24&view=Agenda"
+                source_url="https://crossfit2-rzeszow.cms.efitness.com.pl/kalendarz-zajec?day=2025-11-24&view=Agenda",
             ),
             ClassItem(
                 date=datetime(2025, 11, 24, 7, 0, 0),
                 event_name="HYROX",
                 coach="Jan Kowalski",
                 duration_min=60,
-                source_url="https://crossfit2-rzeszow.cms.efitness.com.pl/kalendarz-zajec?day=2025-11-24&view=Agenda"
-            )
+                source_url="https://crossfit2-rzeszow.cms.efitness.com.pl/kalendarz-zajec?day=2025-11-24&view=Agenda",
+            ),
         ]
 
         # Mock the entire fetch_timetable method
-        with patch.object(scraper, 'fetch_timetable', return_value=expected_result) as mock_fetch:
+        with patch.object(
+            scraper, "fetch_timetable", return_value=expected_result
+        ) as mock_fetch:
             # Act
             result = await scraper.fetch_timetable(date(2025, 11, 24))
 
             # Assert
             mock_fetch.assert_called_once_with(date(2025, 11, 24))
             assert len(result) == 2
-            
+
             # First class
             assert isinstance(result[0], ClassItem)
             assert result[0].event_name == "WOD"
@@ -143,7 +147,7 @@ class TestCrossfitScraper:
             assert result[0].duration_min == 60
             assert result[0].date == datetime(2025, 11, 24, 6, 0, 0)
             assert "view=Agenda" in result[0].source_url
-            
+
             # Second class
             assert result[1].event_name == "HYROX"
             assert result[1].coach == "Jan Kowalski"
@@ -165,7 +169,7 @@ class TestCrossfitScraper:
             event_name=event_name,
             coach=coach,
             duration_min=duration,
-            source_url=source_url
+            source_url=source_url,
         )
 
         # Assert
@@ -189,7 +193,7 @@ class TestCrossfitScraper:
             event_name=event_name,
             coach=coach,
             duration_min=None,
-            source_url=source_url
+            source_url=source_url,
         )
 
         # Assert
