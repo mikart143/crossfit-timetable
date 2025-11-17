@@ -47,10 +47,6 @@ uv run ruff format
 
 ## Environment Variables
 
-The dev container automatically sets:
-- `APP_DEBUG=true` (enables debug mode)
-- `APP_AUTH_TOKEN` (uses your local environment variable or defaults to "default-token-change-me")
-
 To set your own auth token, create a `.env` file in your local workspace or set it in your shell:
 
 ```bash
