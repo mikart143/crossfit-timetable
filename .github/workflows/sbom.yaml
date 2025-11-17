@@ -1,36 +1,31 @@
 name: Generate SBOM
+
 on:
   push:
-    branches:
-    - master
-
-permissions:
-  contents: write
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  schedule:
+    - cron: '31 9 * * 6'
+  workflow_dispatch:
 
 jobs:
-  generate-sbom:
+  code-sbom:
+    name: Codebase SBOM
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      security-events: write
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v5
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version-file: "pyproject.toml"
-
-      - name: Install dependencies
-        run: uv sync --all-extras --dev --locked
 
       - name: Run Trivy in GitHub SBOM mode and submit results to Dependency Graph
         uses: aquasecurity/trivy-action@0.33.1
         with:
           scan-type: 'fs'
           format: 'github'
-          output: 'dependency-results.sbom.json'
+          output: 'code.sbom.json'
           scan-ref: '.'
           github-pat: ${{ secrets.GITHUB_TOKEN }}
           
@@ -38,4 +33,32 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: trivy-sbom-report
-          path: '${{ github.workspace }}/dependency-results.sbom.json'
+          path: '${{ github.workspace }}/code.sbom.json'
+
+  image-sbom:
+    name: Docker Image SBOM
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      security-events: write
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v5
+
+      - name: Build Docker image
+        run: docker build -t crossfit-timetable .
+
+      - name: Run Trivy on Docker image
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          scan-type: 'image'
+          image-ref: 'crossfit-timetable'
+          format: 'github'
+          output: 'image.sbom.json'
+          github-pat: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload image trivy report as a Github artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-image-sbom-report
+          path: '${{ github.workspace }}/image.sbom.json'
