@@ -3,10 +3,19 @@ set -e
 
 echo "🚀 Setting up development environment..."
 
+# Ensure curl is available (AlmaLinux base image might be minimal)
+if ! command -v curl >/dev/null 2>&1; then
+  echo "🔧 Installing curl..."
+  sudo dnf install -y curl
+fi
+
 # Install uv
 echo "📦 Installing uv..."
 curl -LsSf https://astral.sh/uv/install.sh | sh
-export PATH="/home/vscode/.cargo/bin:$PATH"
+
+# Make sure the installer-added path is available in this script
+# uv currently installs into ~/.cargo/bin by default
+export PATH="$HOME/.cargo/bin:$HOME/.local/bin:$PATH"
 
 # Install Python dependencies
 echo "📚 Installing project dependencies..."

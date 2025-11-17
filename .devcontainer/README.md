@@ -5,9 +5,8 @@ This directory contains the configuration for the VS Code Dev Container for the 
 ## What's Included
 
 ### Base Image
-- Python 3.13 (Debian Bookworm)
+- AlmaLinux 9
 - Git and common development tools
-- Zsh with Oh My Zsh
 
 ### VS Code Extensions
 - **Python Support**: Python extension, Pylance, debugpy
