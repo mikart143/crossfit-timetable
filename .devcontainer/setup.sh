@@ -13,10 +13,6 @@ fi
 echo "📦 Installing uv..."
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Make sure the installer-added path is available in this script
-# uv currently installs into ~/.cargo/bin by default
-export PATH="$HOME/.cargo/bin:$HOME/.local/bin:$PATH"
-
 # Install Python dependencies
 echo "📚 Installing project dependencies..."
 uv sync --group dev

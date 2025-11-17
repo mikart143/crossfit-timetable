@@ -6,9 +6,11 @@
     // Git
     "ghcr.io/devcontainers/features/git:1": {},
 
-    // Common utilities + non-root user + zsh/oh-my-zsh
+    // Non root user setup and update common packages
     "ghcr.io/devcontainers/features/common-utils:2": {
       "username": "vscode",
+      "installOhMyZsh": false,
+      "installOhMyZshConfig": false,
       "upgradePackages": true
     }
   },
@@ -60,11 +62,6 @@
       "label": "FastAPI Server",
       "onAutoForward": "notify"
     }
-  },
-
-  "remoteEnv": {
-    "APP_AUTH_TOKEN": "${localEnv:APP_AUTH_TOKEN:default-token-change-me}",
-    "APP_DEBUG": "true"
   },
 
   "containerEnv": {
