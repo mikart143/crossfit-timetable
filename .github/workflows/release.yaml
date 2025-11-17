@@ -2,6 +2,12 @@ name: Release
 
 on:
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Run in dry-run mode (no changes will be made)'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -38,6 +44,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          dry_run: ${{ github.event.inputs.dry_run == 'true' }}
           extra_plugins: |
             @semantic-release/changelog
             @semantic-release/git
@@ -73,12 +80,16 @@ jobs:
             type=semver,pattern={{major}}.{{minor}},value=v${{ needs.release.outputs.new_release_version }}
             type=semver,pattern={{major}},value=v${{ needs.release.outputs.new_release_version }}
             type=raw,value=latest
+          labels: |
+            org.opencontainers.image.description=FastAPI-based web service for extracting CrossFit 2.0 Rzeszów class timetables. Release notes: https://github.com/${{ github.repository }}/releases/tag/v${{ needs.release.outputs.new_release_version }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.licenses=MIT
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
-          push: true
+          push: ${{ github.event.inputs.dry_run != 'true' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha

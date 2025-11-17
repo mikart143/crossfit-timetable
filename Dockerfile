@@ -24,6 +24,11 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # ---------- final ----------
 FROM almalinux/9-micro:9.6  AS final
 
+# Capture platform information
+ARG TARGETPLATFORM
+ARG TARGETOS
+ARG TARGETARCH
+
 # Copy CA certificates from builder (which has them installed)
 COPY --from=builder /etc/pki /etc/pki
 COPY --from=builder /etc/ssl /etc/ssl
