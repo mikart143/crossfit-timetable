@@ -22,7 +22,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 
 # ---------- final ----------
-FROM almalinux/9-micro:9.6  AS final
+FROM almalinux/9-micro:9.7  AS final
 
 # Capture platform information
 ARG TARGETPLATFORM
