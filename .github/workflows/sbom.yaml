@@ -22,7 +22,7 @@ jobs:
       security-events: write
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Run Trivy in GitHub SBOM mode and submit results to Dependency Graph
         uses: aquasecurity/trivy-action@0.33.1
@@ -47,7 +47,7 @@ jobs:
       security-events: write
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Build Docker image
         run: docker build -t crossfit-timetable .
