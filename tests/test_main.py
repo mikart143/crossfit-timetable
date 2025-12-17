@@ -88,13 +88,14 @@ class TestAuthentication:
     def test_verify_token_with_bearer_token(self, client):
         """Test authentication with Bearer token in header."""
         # Arrange
-        with patch("crossfit_timetable.main.scraper.fetch_timetable", new_callable=AsyncMock) as mock_fetch:
+        with patch(
+            "crossfit_timetable.main.scraper.fetch_timetable", new_callable=AsyncMock
+        ) as mock_fetch:
             mock_fetch.return_value = []
 
             # Act
             response = client.get(
-                "/timetable",
-                headers={"Authorization": "Bearer test-token"}
+                "/timetable", headers={"Authorization": "Bearer test-token"}
             )
 
             # Assert
@@ -104,7 +105,9 @@ class TestAuthentication:
     def test_verify_token_with_query_parameter(self, client):
         """Test authentication with token in query parameter."""
         # Arrange
-        with patch("crossfit_timetable.main.scraper.fetch_timetable", new_callable=AsyncMock) as mock_fetch:
+        with patch(
+            "crossfit_timetable.main.scraper.fetch_timetable", new_callable=AsyncMock
+        ) as mock_fetch:
             mock_fetch.return_value = []
 
             # Act
@@ -117,8 +120,7 @@ class TestAuthentication:
         """Test authentication with invalid token."""
         # Act
         response = client.get(
-            "/timetable",
-            headers={"Authorization": "Bearer invalid-token"}
+            "/timetable", headers={"Authorization": "Bearer invalid-token"}
         )
 
         # Assert
@@ -141,13 +143,14 @@ class TestTimetableEndpoint:
     def test_get_timetable_success(self, client, sample_classes):
         """Test getting timetable with valid request."""
         # Arrange
-        with patch("crossfit_timetable.main.scraper.fetch_timetable", new_callable=AsyncMock) as mock_fetch:
+        with patch(
+            "crossfit_timetable.main.scraper.fetch_timetable", new_callable=AsyncMock
+        ) as mock_fetch:
             mock_fetch.return_value = sample_classes
 
             # Act
             response = client.get(
-                "/timetable",
-                headers={"Authorization": "Bearer test-token"}
+                "/timetable", headers={"Authorization": "Bearer test-token"}
             )
 
             # Assert
@@ -161,13 +164,15 @@ class TestTimetableEndpoint:
     def test_get_timetable_with_start_date(self, client, sample_classes):
         """Test getting timetable with specific start date."""
         # Arrange
-        with patch("crossfit_timetable.main.scraper.fetch_timetable", new_callable=AsyncMock) as mock_fetch:
+        with patch(
+            "crossfit_timetable.main.scraper.fetch_timetable", new_callable=AsyncMock
+        ) as mock_fetch:
             mock_fetch.return_value = sample_classes
 
             # Act
             response = client.get(
                 "/timetable?start_date=2025-11-24",
-                headers={"Authorization": "Bearer test-token"}
+                headers={"Authorization": "Bearer test-token"},
             )
 
             # Assert
@@ -182,7 +187,7 @@ class TestTimetableEndpoint:
         # Act
         response = client.get(
             "/timetable?start_date=invalid-date",
-            headers={"Authorization": "Bearer test-token"}
+            headers={"Authorization": "Bearer test-token"},
         )
 
         # Assert
@@ -193,13 +198,15 @@ class TestTimetableEndpoint:
     def test_get_timetable_value_error(self, client):
         """Test getting timetable with date validation error."""
         # Arrange
-        with patch("crossfit_timetable.main.scraper.fetch_timetable", new_callable=AsyncMock) as mock_fetch:
+        with patch(
+            "crossfit_timetable.main.scraper.fetch_timetable", new_callable=AsyncMock
+        ) as mock_fetch:
             mock_fetch.side_effect = ValueError("Date must be a Monday")
 
             # Act
             response = client.get(
                 "/timetable?start_date=2025-11-25",
-                headers={"Authorization": "Bearer test-token"}
+                headers={"Authorization": "Bearer test-token"},
             )
 
             # Assert
@@ -210,13 +217,14 @@ class TestTimetableEndpoint:
     def test_get_timetable_generic_error(self, client):
         """Test getting timetable with unexpected error."""
         # Arrange
-        with patch("crossfit_timetable.main.scraper.fetch_timetable", new_callable=AsyncMock) as mock_fetch:
+        with patch(
+            "crossfit_timetable.main.scraper.fetch_timetable", new_callable=AsyncMock
+        ) as mock_fetch:
             mock_fetch.side_effect = Exception("Unexpected error")
 
             # Act
             response = client.get(
-                "/timetable",
-                headers={"Authorization": "Bearer test-token"}
+                "/timetable", headers={"Authorization": "Bearer test-token"}
             )
 
             # Assert
@@ -231,19 +239,23 @@ class TestICalEndpoint:
     def test_get_ical_success(self, client, sample_classes):
         """Test getting iCal file with valid request."""
         # Arrange
-        with patch("crossfit_timetable.main.scraper.fetch_timetable", new_callable=AsyncMock) as mock_fetch:
+        with patch(
+            "crossfit_timetable.main.scraper.fetch_timetable", new_callable=AsyncMock
+        ) as mock_fetch:
             mock_fetch.return_value = sample_classes
 
             # Act
             response = client.get(
-                "/ical",
-                headers={"Authorization": "Bearer test-token"}
+                "/ical", headers={"Authorization": "Bearer test-token"}
             )
 
             # Assert
             assert response.status_code == 200
             assert response.headers["content-type"] == "text/calendar; charset=utf-8"
-            assert "attachment; filename=crossfit_timetable.ics" in response.headers["content-disposition"]
+            assert (
+                "attachment; filename=crossfit_timetable.ics"
+                in response.headers["content-disposition"]
+            )
             assert b"BEGIN:VCALENDAR" in response.content
             assert b"CrossFit: WOD" in response.content
 
@@ -251,13 +263,14 @@ class TestICalEndpoint:
     def test_get_ical_with_weeks_parameter(self, client, sample_classes):
         """Test getting iCal file with weeks parameter."""
         # Arrange
-        with patch("crossfit_timetable.main.scraper.fetch_timetable", new_callable=AsyncMock) as mock_fetch:
+        with patch(
+            "crossfit_timetable.main.scraper.fetch_timetable", new_callable=AsyncMock
+        ) as mock_fetch:
             mock_fetch.return_value = sample_classes
 
             # Act
             response = client.get(
-                "/ical?weeks=2",
-                headers={"Authorization": "Bearer test-token"}
+                "/ical?weeks=2", headers={"Authorization": "Bearer test-token"}
             )
 
             # Assert
@@ -269,13 +282,14 @@ class TestICalEndpoint:
     def test_get_ical_no_classes_found(self, client):
         """Test getting iCal when no classes are found."""
         # Arrange
-        with patch("crossfit_timetable.main.scraper.fetch_timetable", new_callable=AsyncMock) as mock_fetch:
+        with patch(
+            "crossfit_timetable.main.scraper.fetch_timetable", new_callable=AsyncMock
+        ) as mock_fetch:
             mock_fetch.return_value = []
 
             # Act
             response = client.get(
-                "/ical",
-                headers={"Authorization": "Bearer test-token"}
+                "/ical", headers={"Authorization": "Bearer test-token"}
             )
 
             # Assert
@@ -286,13 +300,14 @@ class TestICalEndpoint:
     def test_get_ical_value_error(self, client):
         """Test getting iCal with validation error."""
         # Arrange
-        with patch("crossfit_timetable.main.scraper.fetch_timetable", new_callable=AsyncMock) as mock_fetch:
+        with patch(
+            "crossfit_timetable.main.scraper.fetch_timetable", new_callable=AsyncMock
+        ) as mock_fetch:
             mock_fetch.side_effect = ValueError("Invalid date")
 
             # Act
             response = client.get(
-                "/ical",
-                headers={"Authorization": "Bearer test-token"}
+                "/ical", headers={"Authorization": "Bearer test-token"}
             )
 
             # Assert
@@ -303,13 +318,14 @@ class TestICalEndpoint:
     def test_get_ical_generic_error(self, client):
         """Test getting iCal with unexpected error."""
         # Arrange
-        with patch("crossfit_timetable.main.scraper.fetch_timetable", new_callable=AsyncMock) as mock_fetch:
+        with patch(
+            "crossfit_timetable.main.scraper.fetch_timetable", new_callable=AsyncMock
+        ) as mock_fetch:
             mock_fetch.side_effect = Exception("Unexpected error")
 
             # Act
             response = client.get(
-                "/ical",
-                headers={"Authorization": "Bearer test-token"}
+                "/ical", headers={"Authorization": "Bearer test-token"}
             )
 
             # Assert
@@ -321,8 +337,7 @@ class TestICalEndpoint:
         """Test iCal endpoint with weeks below minimum."""
         # Act
         response = client.get(
-            "/ical?weeks=0",
-            headers={"Authorization": "Bearer test-token"}
+            "/ical?weeks=0", headers={"Authorization": "Bearer test-token"}
         )
 
         # Assert - FastAPI should reject this with 422 Unprocessable Entity
@@ -333,8 +348,7 @@ class TestICalEndpoint:
         """Test iCal endpoint with weeks above maximum."""
         # Act
         response = client.get(
-            "/ical?weeks=7",
-            headers={"Authorization": "Bearer test-token"}
+            "/ical?weeks=7", headers={"Authorization": "Bearer test-token"}
         )
 
         # Assert - FastAPI should reject this with 422 Unprocessable Entity

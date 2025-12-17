@@ -191,7 +191,7 @@ class TestCrossfitScraper:
             # Preserve real datetime.combine and datetime.min.time for date parsing
             mock_datetime.combine = datetime.combine
             mock_datetime.min.time.return_value = datetime.min.time()
-            
+
             with patch("aiohttp.ClientSession.get") as mock_get:
                 mock_resp = mock_get.return_value.__aenter__.return_value
                 mock_resp.text.return_value = html_content
@@ -227,14 +227,16 @@ class TestCrossfitScraper:
 
         with patch("crossfit_timetable.scraper.datetime") as mock_datetime:
             mock_datetime.now.return_value = datetime(2025, 12, 17, 12, 0, 0)
-            
+
             with patch("aiohttp.ClientSession.get") as mock_get:
                 mock_resp = mock_get.return_value.__aenter__.return_value
                 mock_resp.text.return_value = html_content
                 mock_resp.raise_for_status.return_value = None
 
                 # Act & Assert
-                with pytest.raises(RuntimeError, match="Table with class schedule not found"):
+                with pytest.raises(
+                    RuntimeError, match="Table with class schedule not found"
+                ):
                     await scraper.fetch_timetable(test_date)
 
     @pytest.mark.asyncio
@@ -253,7 +255,7 @@ class TestCrossfitScraper:
 
         with patch("crossfit_timetable.scraper.datetime") as mock_datetime:
             mock_datetime.now.return_value = datetime(2025, 12, 17, 12, 0, 0)
-            
+
             with patch("aiohttp.ClientSession.get") as mock_get:
                 mock_resp = mock_get.return_value.__aenter__.return_value
                 mock_resp.text.return_value = html_content
@@ -289,7 +291,7 @@ class TestCrossfitScraper:
 
         with patch("crossfit_timetable.scraper.datetime") as mock_datetime:
             mock_datetime.now.return_value = datetime(2025, 12, 17, 12, 0, 0)
-            
+
             with patch("aiohttp.ClientSession.get") as mock_get:
                 mock_resp = mock_get.return_value.__aenter__.return_value
                 mock_resp.text.return_value = html_content
@@ -324,7 +326,7 @@ class TestCrossfitScraper:
 
         with patch("crossfit_timetable.scraper.datetime") as mock_datetime:
             mock_datetime.now.return_value = datetime(2025, 12, 17, 12, 0, 0)
-            
+
             with patch("aiohttp.ClientSession.get") as mock_get:
                 mock_resp = mock_get.return_value.__aenter__.return_value
                 mock_resp.text.return_value = html_content
@@ -360,7 +362,7 @@ class TestCrossfitScraper:
 
         with patch("crossfit_timetable.scraper.datetime") as mock_datetime:
             mock_datetime.now.return_value = datetime(2025, 12, 17, 12, 0, 0)
-            
+
             with patch("aiohttp.ClientSession.get") as mock_get:
                 mock_resp = mock_get.return_value.__aenter__.return_value
                 mock_resp.text.return_value = html_content
@@ -415,7 +417,7 @@ class TestCrossfitScraper:
             # Preserve real datetime.combine and datetime.min.time for date parsing
             mock_datetime.combine = datetime.combine
             mock_datetime.min.time.return_value = datetime.min.time()
-            
+
             with patch("aiohttp.ClientSession.get") as mock_get:
                 mock_resp = mock_get.return_value.__aenter__.return_value
                 mock_resp.text.return_value = html_content
@@ -513,7 +515,7 @@ class TestCrossfitScraper:
             # Preserve real datetime.combine and datetime.min.time for date parsing
             mock_datetime.combine = datetime.combine
             mock_datetime.min.time.return_value = datetime.min.time()
-            
+
             with patch("aiohttp.ClientSession.get") as mock_get:
                 mock_resp = mock_get.return_value.__aenter__.return_value
                 mock_resp.text.return_value = html_content

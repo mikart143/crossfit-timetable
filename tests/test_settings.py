@@ -66,7 +66,9 @@ class TestSettings:
             settings = Settings()
 
         # Assert - should use default values
-        assert settings.scraper_base_url == "https://crossfit2-rzeszow.cms.efitness.com.pl"
+        assert (
+            settings.scraper_base_url == "https://crossfit2-rzeszow.cms.efitness.com.pl"
+        )
         assert settings.debug is False
         assert settings.auth_token == "default-token-change-me"
         assert settings.enable_swagger is True
