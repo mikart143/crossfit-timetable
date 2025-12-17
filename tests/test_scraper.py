@@ -186,7 +186,9 @@ class TestCrossfitScraper:
         """
 
         with patch("crossfit_timetable.scraper.datetime") as mock_datetime:
+            # Mock datetime.now() to return a fixed date for testing
             mock_datetime.now.return_value = datetime(2025, 12, 17, 12, 0, 0)
+            # Preserve real datetime.combine and datetime.min.time for date parsing
             mock_datetime.combine = datetime.combine
             mock_datetime.min.time.return_value = datetime.min.time()
             
@@ -408,7 +410,9 @@ class TestCrossfitScraper:
         """
 
         with patch("crossfit_timetable.scraper.datetime") as mock_datetime:
+            # Mock datetime.now() to return a fixed date for testing
             mock_datetime.now.return_value = datetime(2025, 12, 17, 12, 0, 0)
+            # Preserve real datetime.combine and datetime.min.time for date parsing
             mock_datetime.combine = datetime.combine
             mock_datetime.min.time.return_value = datetime.min.time()
             
@@ -504,7 +508,9 @@ class TestCrossfitScraper:
         """
 
         with patch("crossfit_timetable.scraper.datetime") as mock_datetime:
+            # Mock datetime.now() to return a fixed date for testing
             mock_datetime.now.return_value = datetime(2025, 12, 17, 12, 0, 0)
+            # Preserve real datetime.combine and datetime.min.time for date parsing
             mock_datetime.combine = datetime.combine
             mock_datetime.min.time.return_value = datetime.min.time()
             
