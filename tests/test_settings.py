@@ -9,8 +9,6 @@ Tests follow the AAA (Arrange, Act, Assert) pattern:
 
 import os
 from unittest.mock import patch
-import pytest
-from pydantic import ValidationError
 
 from crossfit_timetable.settings import Settings
 

@@ -12,7 +12,7 @@ from unittest.mock import patch, AsyncMock
 import pytest
 from fastapi.testclient import TestClient
 
-from crossfit_timetable.main import app, verify_token
+from crossfit_timetable.main import app
 from crossfit_timetable.scraper import ClassItem
 
 
