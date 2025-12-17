@@ -1,5 +1,5 @@
 # ---------- builder ----------
-FROM almalinux/9-minimal:9.6 AS builder
+FROM almalinux/9-minimal:9.7 AS builder
 
 COPY --from=ghcr.io/astral-sh/uv:0.9.9 /uv /uvx /bin/
 
