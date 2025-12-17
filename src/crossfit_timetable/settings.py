@@ -12,16 +12,16 @@ class Settings(BaseSettings):
     )
 
     # Base URL for the CrossFit timetable scraper
-    scraper_base_url: str
+    scraper_base_url: str = "https://crossfit2-rzeszow.cms.efitness.com.pl"
 
     # Debug mode flag
-    debug: bool
+    debug: bool = False
 
     # Authentication token for API access
-    auth_token: str
+    auth_token: str = "default-token-change-me"
 
     # Enable Swagger UI
-    enable_swagger: bool
+    enable_swagger: bool = True
 
 
 # Create a global settings instance
