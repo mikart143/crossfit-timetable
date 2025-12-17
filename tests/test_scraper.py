@@ -38,13 +38,15 @@ class TestCrossfitScraper:
     def test_get_valid_monday_valid_date(self):
         """Test get_valid_monday with a valid Monday date."""
         # Arrange
-        monday = date(2025, 11, 10)  # Monday
+        with patch("crossfit_timetable.scraper.datetime") as mock_datetime:
+            mock_datetime.now.return_value = datetime(2025, 11, 11, 12, 0, 0)
+            monday = date(2025, 11, 10)  # Monday
 
-        # Act
-        result = CrossfitScraper.get_valid_monday(monday)
+            # Act
+            result = CrossfitScraper.get_valid_monday(monday)
 
-        # Assert
-        assert result == monday
+            # Assert
+            assert result == monday
 
     def test_get_valid_monday_not_monday(self):
         """Test get_valid_monday raises error for non-Monday dates."""
