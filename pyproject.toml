@@ -27,3 +27,6 @@ dev = [
 
 [tool.uv]
 package = true
+override-dependencies = [
+    "urllib3>=2.6.0",
+]
