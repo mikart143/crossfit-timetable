@@ -156,6 +156,277 @@ class TestCrossfitScraper:
             assert result[1].duration_min == 60
             assert result[1].date == datetime(2025, 11, 24, 7, 0, 0)
 
+    @pytest.mark.asyncio
+    async def test_fetch_timetable_with_html(self, scraper):
+        """Test fetch_timetable with mocked HTML response."""
+        # Arrange
+        test_date = date(2025, 12, 15)  # A Monday
+        html_content = """
+        <html>
+        <body>
+        <table class="calendar_table_agenda">
+            <tr>
+                <td rowspan="2">Pn, 2025-12-15</td>
+                <td>06:00 - 07:00</td>
+                <td>
+                    <p class="event_name">WOD</p>
+                    Tomasz Nowosielski
+                </td>
+            </tr>
+            <tr>
+                <td>07:00 - 08:00</td>
+                <td>
+                    <p class="event_name">HYROX</p>
+                    Jan Kowalski
+                </td>
+            </tr>
+        </table>
+        </body>
+        </html>
+        """
+
+        with patch("crossfit_timetable.scraper.datetime") as mock_datetime:
+            mock_datetime.now.return_value = datetime(2025, 12, 17, 12, 0, 0)
+            mock_datetime.combine = datetime.combine
+            mock_datetime.min.time.return_value = datetime.min.time()
+            
+            with patch("aiohttp.ClientSession.get") as mock_get:
+                mock_resp = mock_get.return_value.__aenter__.return_value
+                mock_resp.text.return_value = html_content
+                mock_resp.raise_for_status.return_value = None
+
+                # Act
+                result = await scraper.fetch_timetable(test_date)
+
+                # Assert
+                assert len(result) == 2
+                assert result[0].event_name == "WOD"
+                assert result[0].coach == "Tomasz Nowosielski"
+                assert result[0].date == datetime(2025, 12, 15, 6, 0, 0)
+                assert result[0].duration_min == 60
+
+                assert result[1].event_name == "HYROX"
+                assert result[1].coach == "Jan Kowalski"
+                assert result[1].date == datetime(2025, 12, 15, 7, 0, 0)
+                assert result[1].duration_min == 60
+
+    @pytest.mark.asyncio
+    async def test_fetch_timetable_no_table_found(self, scraper):
+        """Test fetch_timetable when no table is found in HTML."""
+        # Arrange
+        test_date = date(2025, 12, 15)  # A Monday
+        html_content = """
+        <html>
+        <body>
+        <p>No table here</p>
+        </body>
+        </html>
+        """
+
+        with patch("crossfit_timetable.scraper.datetime") as mock_datetime:
+            mock_datetime.now.return_value = datetime(2025, 12, 17, 12, 0, 0)
+            
+            with patch("aiohttp.ClientSession.get") as mock_get:
+                mock_resp = mock_get.return_value.__aenter__.return_value
+                mock_resp.text.return_value = html_content
+                mock_resp.raise_for_status.return_value = None
+
+                # Act & Assert
+                with pytest.raises(RuntimeError, match="Table with class schedule not found"):
+                    await scraper.fetch_timetable(test_date)
+
+    @pytest.mark.asyncio
+    async def test_fetch_timetable_empty_table(self, scraper):
+        """Test fetch_timetable with empty table."""
+        # Arrange
+        test_date = date(2025, 12, 15)  # A Monday
+        html_content = """
+        <html>
+        <body>
+        <table class="calendar_table_agenda">
+        </table>
+        </body>
+        </html>
+        """
+
+        with patch("crossfit_timetable.scraper.datetime") as mock_datetime:
+            mock_datetime.now.return_value = datetime(2025, 12, 17, 12, 0, 0)
+            
+            with patch("aiohttp.ClientSession.get") as mock_get:
+                mock_resp = mock_get.return_value.__aenter__.return_value
+                mock_resp.text.return_value = html_content
+                mock_resp.raise_for_status.return_value = None
+
+                # Act
+                result = await scraper.fetch_timetable(test_date)
+
+                # Assert
+                assert len(result) == 0
+
+    @pytest.mark.asyncio
+    async def test_fetch_timetable_malformed_time(self, scraper):
+        """Test fetch_timetable with malformed time in HTML."""
+        # Arrange
+        test_date = date(2025, 12, 15)  # A Monday
+        html_content = """
+        <html>
+        <body>
+        <table class="calendar_table_agenda">
+            <tr>
+                <td rowspan="1">Pn, 2025-12-15</td>
+                <td>invalid-time</td>
+                <td>
+                    <p class="event_name">WOD</p>
+                    Coach Name
+                </td>
+            </tr>
+        </table>
+        </body>
+        </html>
+        """
+
+        with patch("crossfit_timetable.scraper.datetime") as mock_datetime:
+            mock_datetime.now.return_value = datetime(2025, 12, 17, 12, 0, 0)
+            
+            with patch("aiohttp.ClientSession.get") as mock_get:
+                mock_resp = mock_get.return_value.__aenter__.return_value
+                mock_resp.text.return_value = html_content
+                mock_resp.raise_for_status.return_value = None
+
+                # Act
+                result = await scraper.fetch_timetable(test_date)
+
+                # Assert - should skip rows with invalid time
+                assert len(result) == 0
+
+    @pytest.mark.asyncio
+    async def test_fetch_timetable_no_event_name(self, scraper):
+        """Test fetch_timetable with missing event name."""
+        # Arrange
+        test_date = date(2025, 12, 15)  # A Monday
+        html_content = """
+        <html>
+        <body>
+        <table class="calendar_table_agenda">
+            <tr>
+                <td rowspan="1">Pn, 2025-12-15</td>
+                <td>06:00 - 07:00</td>
+                <td>
+                    No event name here
+                </td>
+            </tr>
+        </table>
+        </body>
+        </html>
+        """
+
+        with patch("crossfit_timetable.scraper.datetime") as mock_datetime:
+            mock_datetime.now.return_value = datetime(2025, 12, 17, 12, 0, 0)
+            
+            with patch("aiohttp.ClientSession.get") as mock_get:
+                mock_resp = mock_get.return_value.__aenter__.return_value
+                mock_resp.text.return_value = html_content
+                mock_resp.raise_for_status.return_value = None
+
+                # Act
+                result = await scraper.fetch_timetable(test_date)
+
+                # Assert - should skip rows without event name
+                assert len(result) == 0
+
+    @pytest.mark.asyncio
+    async def test_fetch_timetable_invalid_date(self, scraper):
+        """Test fetch_timetable with invalid date in HTML."""
+        # Arrange
+        test_date = date(2025, 12, 15)  # A Monday
+        html_content = """
+        <html>
+        <body>
+        <table class="calendar_table_agenda">
+            <tr>
+                <td rowspan="1">Invalid Date</td>
+                <td>06:00 - 07:00</td>
+                <td>
+                    <p class="event_name">WOD</p>
+                    Coach
+                </td>
+            </tr>
+        </table>
+        </body>
+        </html>
+        """
+
+        with patch("crossfit_timetable.scraper.datetime") as mock_datetime:
+            mock_datetime.now.return_value = datetime(2025, 12, 17, 12, 0, 0)
+            
+            with patch("aiohttp.ClientSession.get") as mock_get:
+                mock_resp = mock_get.return_value.__aenter__.return_value
+                mock_resp.text.return_value = html_content
+                mock_resp.raise_for_status.return_value = None
+
+                # Act
+                result = await scraper.fetch_timetable(test_date)
+
+                # Assert - should skip rows with invalid dates
+                assert len(result) == 0
+
+    @pytest.mark.asyncio
+    async def test_fetch_timetable_multiple_days(self, scraper):
+        """Test fetch_timetable with multiple days in the same week."""
+        # Arrange
+        test_date = date(2025, 12, 15)  # A Monday
+        html_content = """
+        <html>
+        <body>
+        <table class="calendar_table_agenda">
+            <tr>
+                <td rowspan="2">Pn, 2025-12-15</td>
+                <td>06:00 - 07:00</td>
+                <td>
+                    <p class="event_name">WOD</p>
+                    Coach A
+                </td>
+            </tr>
+            <tr>
+                <td>18:00 - 19:00</td>
+                <td>
+                    <p class="event_name">Evening WOD</p>
+                    Coach B
+                </td>
+            </tr>
+            <tr>
+                <td rowspan="1">Wt, 2025-12-16</td>
+                <td>06:00 - 07:00</td>
+                <td>
+                    <p class="event_name">HYROX</p>
+                    Coach C
+                </td>
+            </tr>
+        </table>
+        </body>
+        </html>
+        """
+
+        with patch("crossfit_timetable.scraper.datetime") as mock_datetime:
+            mock_datetime.now.return_value = datetime(2025, 12, 17, 12, 0, 0)
+            mock_datetime.combine = datetime.combine
+            mock_datetime.min.time.return_value = datetime.min.time()
+            
+            with patch("aiohttp.ClientSession.get") as mock_get:
+                mock_resp = mock_get.return_value.__aenter__.return_value
+                mock_resp.text.return_value = html_content
+                mock_resp.raise_for_status.return_value = None
+
+                # Act
+                result = await scraper.fetch_timetable(test_date)
+
+                # Assert
+                assert len(result) == 3
+                # Check sorted by date
+                assert result[0].date == datetime(2025, 12, 15, 6, 0, 0)
+                assert result[1].date == datetime(2025, 12, 15, 18, 0, 0)
+                assert result[2].date == datetime(2025, 12, 16, 6, 0, 0)
+
     def test_class_item_creation(self):
         """Test ClassItem Pydantic model creation and validation."""
         # Arrange
@@ -200,3 +471,52 @@ class TestCrossfitScraper:
 
         # Assert
         assert item.duration_min is None
+
+    @pytest.mark.asyncio
+    async def test_fetch_timetable_with_empty_rows_and_no_current_date(self, scraper):
+        """Test fetch_timetable with empty rows and rows without current_date set."""
+        # Arrange
+        test_date = date(2025, 12, 15)  # A Monday
+        html_content = """
+        <html>
+        <body>
+        <table class="calendar_table_agenda">
+            <tr>
+            </tr>
+            <tr>
+                <td>06:00 - 07:00</td>
+                <td>
+                    <p class="event_name">WOD</p>
+                    Coach A
+                </td>
+            </tr>
+            <tr>
+                <td rowspan="1">Pn, 2025-12-15</td>
+                <td>18:00 - 19:00</td>
+                <td>
+                    <p class="event_name">Evening WOD</p>
+                    Coach B
+                </td>
+            </tr>
+        </table>
+        </body>
+        </html>
+        """
+
+        with patch("crossfit_timetable.scraper.datetime") as mock_datetime:
+            mock_datetime.now.return_value = datetime(2025, 12, 17, 12, 0, 0)
+            mock_datetime.combine = datetime.combine
+            mock_datetime.min.time.return_value = datetime.min.time()
+            
+            with patch("aiohttp.ClientSession.get") as mock_get:
+                mock_resp = mock_get.return_value.__aenter__.return_value
+                mock_resp.text.return_value = html_content
+                mock_resp.raise_for_status.return_value = None
+
+                # Act
+                result = await scraper.fetch_timetable(test_date)
+
+                # Assert - should skip empty row and row without current_date, only get the valid one
+                assert len(result) == 1
+                assert result[0].event_name == "Evening WOD"
+                assert result[0].date == datetime(2025, 12, 15, 18, 0, 0)

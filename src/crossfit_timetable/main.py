@@ -100,6 +100,8 @@ async def get_timetable(
 
         classes = await scraper.fetch_timetable(target_date)
         return classes
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
