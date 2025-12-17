@@ -2,6 +2,9 @@ version = 1
 revision = 3
 requires-python = "==3.13.*"
 
+[manifest]
+overrides = [{ name = "urllib3", specifier = ">=2.6.0" }]
+
 [[package]]
 name = "aiohappyeyeballs"
 version = "2.6.1"
@@ -189,7 +192,6 @@ dependencies = [
     { name = "pydantic-settings" },
     { name = "python-dateutil" },
     { name = "python-dotenv" },
-    { name = "urllib3" },
 ]
 
 [package.dev-dependencies]
@@ -212,7 +214,6 @@ requires-dist = [
     { name = "pydantic-settings", specifier = ">=2.0.0" },
     { name = "python-dateutil", specifier = ">=2.9.0.post0" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
-    { name = "urllib3", specifier = ">=2.6.0" },
 ]
 
 [package.metadata.requires-dev]
