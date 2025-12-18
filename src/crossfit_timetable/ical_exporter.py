@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from typing import List
 from zoneinfo import ZoneInfo
 
-from icalendar import Calendar, Event, Timezone, TimezoneStandard, vText
+from icalendar import Calendar, Event, Timezone, TimezoneStandard
 
 from .scraper import ClassItem
 
@@ -23,29 +23,16 @@ class ICalExporter:
         """Initialize the iCal exporter."""
         pass
 
-    def _create_structured_location(self, location: str) -> str:
+    def _create_structured_location(self) -> str:
         """
         Create X-APPLE-STRUCTURED-LOCATION property value.
 
         This is an Apple-specific extension that enables enhanced location features
         in Apple Calendar, including map integration and travel time alerts.
 
-        Format: geo:latitude,longitude with parameters:
-        - VALUE=URI: Indicates the value is a URI
-        - X-ADDRESS: Physical address with \\n as line separator
-        - X-TITLE: Location title/name
-        - X-APPLE-RADIUS: Optional radius in meters (defaults to ~50m)
-
-        Args:
-            location: Human-readable address string
-
         Returns:
             Formatted geo URI string for X-APPLE-STRUCTURED-LOCATION
         """
-        # Format address for X-APPLE-STRUCTURED-LOCATION
-        # Apple Calendar expects \\n (literal backslash-n) for line breaks in X-ADDRESS
-        address_formatted = location.replace(", ", "\\n")
-
         # Build the geo URI with coordinates
         geo_uri = f"geo:{CROSSFIT_RZESZOW_LAT},{CROSSFIT_RZESZOW_LON}"
 
@@ -124,7 +111,7 @@ class ICalExporter:
             # Enables map integration, travel time alerts, and location-based features
             # Format address for X-ADDRESS parameter (use \\n for line breaks)
             address_formatted = location.replace(", ", "\\n")
-            geo_uri = self._create_structured_location(location)
+            geo_uri = self._create_structured_location()
 
             # Add the property with all required parameters
             # Note: icalendar library handles this as a custom property
