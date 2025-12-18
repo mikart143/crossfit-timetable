@@ -73,6 +73,8 @@ jobs:
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
+        env:
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
@@ -81,9 +83,13 @@ jobs:
             type=semver,pattern={{major}},value=v${{ needs.release.outputs.new_release_version }}
             type=raw,value=latest
           labels: |
+            org.opencontainers.image.title=CrossFit 2.0 Rzeszów Timetable
+            org.opencontainers.image.url=https://github.com/${{ github.repository }}
             org.opencontainers.image.description=FastAPI-based web service for extracting CrossFit 2.0 Rzeszów class timetables. Release notes: https://github.com/${{ github.repository }}/releases/tag/v${{ needs.release.outputs.new_release_version }}
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.licenses=MIT
+          annotations: |
+            org.opencontainers.image.description=FastAPI-based web service for extracting CrossFit 2.0 Rzeszów class timetables. Release notes: https://github.com/${{ github.repository }}/releases/tag/v${{ needs.release.outputs.new_release_version }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
@@ -92,6 +98,7 @@ jobs:
           push: ${{ github.event.inputs.dry_run != 'true' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
