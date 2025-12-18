@@ -36,6 +36,7 @@ class CrossfitScraper:
             await response.raise_for_status()
         else:
             response.raise_for_status()
+
     @staticmethod
     def get_valid_monday(target_date: Optional[date] = None) -> date:
         """Get a valid Monday date, defaulting to this week's Monday, with constraints."""
