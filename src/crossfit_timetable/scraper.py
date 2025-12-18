@@ -139,6 +139,8 @@ class CrossfitScraper:
             logger.warning(f"Failed to fetch location from website: {e}")
             return None
 
+        return None
+
     async def fetch_timetable(
         self,
         start_date: Optional[date] = None,
