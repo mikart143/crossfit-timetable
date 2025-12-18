@@ -1,3 +1,4 @@
+import inspect
 import logging
 import re
 from datetime import date, datetime, timedelta
@@ -27,6 +28,13 @@ class CrossfitScraper:
 
     # Compiled regex patterns for performance
     DATE_REGEX = re.compile(r"\d{4}-\d{2}-\d{2}")
+
+    @staticmethod
+    async def _raise_for_status(response: aiohttp.ClientResponse) -> None:
+        """Call raise_for_status, awaiting when mocks return a coroutine."""
+        result = response.raise_for_status()
+        if inspect.isawaitable(result):
+            await result
 
     @staticmethod
     def get_valid_monday(target_date: Optional[date] = None) -> date:
@@ -75,14 +83,22 @@ class CrossfitScraper:
             return parse_date(match.group(0)).date()
         return None
 
-    async def fetch_location(self, base_url: str) -> Optional[str]:
+    async def fetch_location(
+        self, base_url: str, session: Optional[aiohttp.ClientSession] = None
+    ) -> Optional[str]:
         """Fetch the location/address from the website's address section."""
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    base_url, timeout=aiohttp.ClientTimeout(total=30)
-                ) as resp:
-                    resp.raise_for_status()
+            # Reuse provided session when possible to reduce overhead
+            if session is None:
+                async with aiohttp.ClientSession(
+                    timeout=aiohttp.ClientTimeout(total=30)
+                ) as own_session:
+                    async with own_session.get(base_url) as resp:
+                        await self._raise_for_status(resp)
+                        html = await resp.text()
+            else:
+                async with session.get(base_url) as resp:
+                    await self._raise_for_status(resp)
                     html = await resp.text()
 
             soup = BeautifulSoup(html, "lxml")
@@ -124,7 +140,11 @@ class CrossfitScraper:
             return None
 
     async def fetch_timetable(
-        self, start_date: Optional[date] = None
+        self,
+        start_date: Optional[date] = None,
+        *,
+        session: Optional[aiohttp.ClientSession] = None,
+        location: Optional[str] = None,
     ) -> List[ClassItem]:
         """Fetch and parse the CrossFit timetable from the website."""
         monday = self.get_valid_monday(start_date)
@@ -134,14 +154,26 @@ class CrossfitScraper:
         logger.info(f"Fetching timetable for week starting {monday}")
         logger.debug(f"Requesting URL: {url}")
 
-        # Fetch location from website
-        location = await self.fetch_location(base_url)
+        async def ensure_location(
+            active_session: aiohttp.ClientSession,
+        ) -> Optional[str]:
+            if location is not None:
+                return location
+            return await self.fetch_location(base_url, session=active_session)
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                url, timeout=aiohttp.ClientTimeout(total=30)
-            ) as resp:
-                resp.raise_for_status()
+        # Fetch location from website (cached) and timetable HTML, reusing session if provided
+        if session is None:
+            async with aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=30)
+            ) as own_session:
+                resolved_location = await ensure_location(own_session)
+                async with own_session.get(url) as resp:
+                    await self._raise_for_status(resp)
+                    html = await resp.text()
+        else:
+            resolved_location = await ensure_location(session)
+            async with session.get(url) as resp:
+                await self._raise_for_status(resp)
                 html = await resp.text()
 
         soup = BeautifulSoup(html, "lxml")
@@ -222,7 +254,7 @@ class CrossfitScraper:
                 coach=coach,
                 duration_min=duration_min,
                 source_url=source_url,
-                location=location,
+                location=resolved_location,
             )
             records.append(item)
 

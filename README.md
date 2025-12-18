@@ -6,7 +6,7 @@ A FastAPI-based web service for extracting CrossFit class timetables from the Cr
 
 - **REST API**: FastAPI-based web service with automatic OpenAPI documentation
 - **Authentication**: Simple token-based authentication for API access
-- **Parametrized Date Selection**: Fetch timetables for specific weeks by providing a Monday date
+- **Parametrized Week Selection**: Fetch timetables for 1–6 weeks starting from the current week
 - **Date Validation**: Ensures dates are Mondays and not more than 2 weeks in the past
 - **Multiple Output Formats**: JSON data and iCal calendar export
 - **Pydantic Models**: Type-safe data models with validation
@@ -60,7 +60,7 @@ Returns basic API information. (No authentication required)
   "message": "CrossFit Timetable API",
   "endpoints": {
     "/timetable": "Get timetable data as JSON",
-    "/ical": "Download timetable as iCal file"
+    "/timetable.ical": "Download timetable as iCal file"
   }
 }
 ```
@@ -73,7 +73,7 @@ Returns the CrossFit timetable data as JSON. (Authentication required)
 - Query parameter: `?token=<your-token>`
 
 **Query Parameters:**
-- `start_date` (optional): Start date in YYYY-MM-DD format (must be a Monday)
+- `weeks` (optional): Number of weeks to include (1-6, default 1)
 - `token` (optional): API token (alternative to Authorization header)
 
 **Response:**
@@ -89,7 +89,7 @@ Returns the CrossFit timetable data as JSON. (Authentication required)
 ]
 ```
 
-#### GET `/ical`
+#### GET `/timetable.ical`
 Returns the CrossFit timetable as an iCal file for calendar import. (Authentication required)
 
 **Authentication Options:**
@@ -111,20 +111,20 @@ curl -H "Authorization: Bearer your-token-here" http://localhost:8000/timetable
 # Get current week's timetable as JSON (using query parameter)
 curl "http://localhost:8000/timetable?token=your-token-here"
 
-# Get specific week's timetable (Bearer token)
-curl -H "Authorization: Bearer your-token-here" "http://localhost:8000/timetable?start_date=2025-11-11"
+# Get next 2 weeks' timetable (Bearer token)
+curl -H "Authorization: Bearer your-token-here" "http://localhost:8000/timetable?weeks=2"
 
-# Get specific week's timetable (query parameter)
-curl "http://localhost:8000/timetable?start_date=2025-11-11&token=your-token-here"
+# Get next 2 weeks' timetable (query parameter)
+curl "http://localhost:8000/timetable?weeks=2&token=your-token-here"
 
 # Download iCal file (Bearer token)
-curl -H "Authorization: Bearer your-token-here" -o crossfit.ics http://localhost:8000/ical
+curl -H "Authorization: Bearer your-token-here" -o crossfit.ics http://localhost:8000/timetable.ical
 
 # Download iCal file (query parameter)
-curl -o crossfit.ics "http://localhost:8000/ical?token=your-token-here"
+curl -o crossfit.ics "http://localhost:8000/timetable.ical?token=your-token-here"
 
 # Download next 2 weeks' iCal (query parameter)
-curl -o crossfit.ics "http://localhost:8000/ical?weeks=2&token=your-token-here"
+curl -o crossfit.ics "http://localhost:8000/timetable.ical?weeks=2&token=your-token-here"
 ```
 
 ## API Documentation

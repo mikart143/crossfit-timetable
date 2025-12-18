@@ -1,8 +1,10 @@
+import asyncio
 import logging
 from datetime import date, timedelta
 from importlib.metadata import version
 from typing import List, Optional
 
+import aiohttp
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.responses import PlainTextResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -80,44 +82,49 @@ async def root():
         "message": "CrossFit Timetable API",
         "endpoints": {
             "/timetable": "Get timetable data as JSON",
-            "/ical": "Download timetable as iCal file",
+            "/timetable.ical": "Download timetable as iCal file",
         },
     }
 
 
 @app.get("/timetable", response_model=List[ClassItem])
 async def get_timetable(
-    start_date: Optional[str] = Query(
-        None, description="Start date (YYYY-MM-DD, must be a Monday)"
-    ),
+    weeks: int = Query(1, ge=1, le=6, description="Number of weeks to include (1-6)"),
     token: str = Depends(verify_token),
 ):
     """Get the CrossFit timetable data as JSON."""
     try:
-        target_date = None
-        if start_date:
-            try:
-                target_date = date.fromisoformat(start_date)
-            except ValueError:
-                raise HTTPException(
-                    status_code=400, detail="Invalid date format. Use YYYY-MM-DD"
-                )
+        today = date.today()
+        current_monday = today - timedelta(days=today.weekday())
+        mondays = [current_monday + timedelta(weeks=i) for i in range(weeks)]
 
-        classes = await scraper.fetch_timetable(target_date)
-        return classes
-    except HTTPException:
-        # Re-raise HTTPException to preserve the correct status code
-        # Without this, the generic Exception handler below would catch it
-        # and convert it to a 500 error, masking the true error type
-        raise
+        timeout = aiohttp.ClientTimeout(total=30)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            location = await scraper.fetch_location(
+                settings.scraper_base_url, session=session
+            )
+            week_tasks = [
+                scraper.fetch_timetable(monday, session=session, location=location)
+                for monday in mondays
+            ]
+            week_results = await asyncio.gather(*week_tasks)
+
+        all_classes = [cls for week in week_results for cls in week]
+
+        if not all_classes:
+            raise HTTPException(status_code=404, detail="No classes found")
+
+        return all_classes
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error fetching timetable: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch timetable")
 
 
-@app.get("/ical", response_class=PlainTextResponse)
+@app.get("/timetable.ical", response_class=PlainTextResponse)
 async def get_ical(
     weeks: int = Query(1, ge=1, le=6, description="Number of weeks to include (1-6)"),
     token: str = Depends(verify_token),
@@ -126,11 +133,20 @@ async def get_ical(
     try:
         today = date.today()
         current_monday = today - timedelta(days=today.weekday())
-        all_classes = []
-        for i in range(weeks):
-            target_monday = current_monday + timedelta(weeks=i)
-            classes = await scraper.fetch_timetable(target_monday)
-            all_classes.extend(classes)
+        mondays = [current_monday + timedelta(weeks=i) for i in range(weeks)]
+
+        timeout = aiohttp.ClientTimeout(total=30)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            location = await scraper.fetch_location(
+                settings.scraper_base_url, session=session
+            )
+            week_tasks = [
+                scraper.fetch_timetable(monday, session=session, location=location)
+                for monday in mondays
+            ]
+            week_results = await asyncio.gather(*week_tasks)
+
+        all_classes = [cls for week in week_results for cls in week]
 
         if not all_classes:
             raise HTTPException(status_code=404, detail="No classes found")
