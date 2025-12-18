@@ -1,3 +1,19 @@
+# [1.1.0](https://github.com/mikart143/crossfit-timetable/compare/v1.0.0...v1.1.0) (2025-12-18)
+
+
+### Bug Fixes
+
+* ambiguous return ([e9aeb11](https://github.com/mikart143/crossfit-timetable/commit/e9aeb1106d97e51614d0a8544c4cbda9323b1fe3))
+* Statement has no effect ([1d8ac37](https://github.com/mikart143/crossfit-timetable/commit/1d8ac378d5bdc63df48bb9abbaf7e7f3729afa91))
+
+
+### Features
+
+* Added location extraction ([d08c69f](https://github.com/mikart143/crossfit-timetable/commit/d08c69f4a0679678710d0e8b9f42f229ba38e195))
+* Added versioning to swagger ([1f23494](https://github.com/mikart143/crossfit-timetable/commit/1f234948b4066a8645f81802e50c7f6b2aace4d4))
+* Fixed uvicorn logging ([f75709b](https://github.com/mikart143/crossfit-timetable/commit/f75709be17a83723759c5e48bcc25c6a435ead8e))
+* Optimising the calendar fetching ([3161444](https://github.com/mikart143/crossfit-timetable/commit/3161444b3fb9fd75130fd6b0e611d3aa6bccb08f))
+
 # 1.0.0 (2025-11-16)
 
 
