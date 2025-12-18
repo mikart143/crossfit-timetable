@@ -1,5 +1,6 @@
 import logging
 from datetime import date, timedelta
+from importlib.metadata import version
 from typing import List, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Query
@@ -19,8 +20,8 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="CrossFit Timetable API",
-    description="API for CrossFit 2 Rzeszów timetable data",
-    version="1.0.0",
+    description="API for CrossFit 2.0 Rzeszów timetable data",
+    version=version("crossfit-timetable"),
     openapi_url="/openapi.json" if settings.enable_swagger else None,
     docs_url="/docs" if settings.enable_swagger else None,
 )
