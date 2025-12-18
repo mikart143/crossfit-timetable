@@ -31,11 +31,11 @@ class CrossfitScraper:
 
     @staticmethod
     async def _raise_for_status(response: aiohttp.ClientResponse) -> None:
-        """Call raise_for_status, awaiting when mocks return a coroutine."""
-        result = response.raise_for_status()
-        if inspect.isawaitable(result):
-            await result
-
+        """Call raise_for_status, compatible with both sync and async versions (for mocks)."""
+        if inspect.iscoroutinefunction(response.raise_for_status):
+            await response.raise_for_status()
+        else:
+            response.raise_for_status()
     @staticmethod
     def get_valid_monday(target_date: Optional[date] = None) -> date:
         """Get a valid Monday date, defaulting to this week's Monday, with constraints."""
