@@ -17,6 +17,9 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
+logging.getLogger("uvicorn.access").setLevel(
+    logging.DEBUG if settings.debug else logging.INFO
+)
 
 app = FastAPI(
     title="CrossFit Timetable API",
