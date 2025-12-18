@@ -2,17 +2,18 @@ import logging
 from datetime import date, timedelta
 from typing import List, Optional
 
-from fastapi import FastAPI, HTTPException, Query, Depends
+from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.responses import PlainTextResponse
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from crossfit_timetable.scraper import CrossfitScraper, ClassItem
 from crossfit_timetable.ical_exporter import ICalExporter
+from crossfit_timetable.scraper import ClassItem, CrossfitScraper
 from crossfit_timetable.settings import settings
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.DEBUG if settings.debug else logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
 

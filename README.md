@@ -34,9 +34,10 @@ The application uses environment variables for configuration with the `APP_` pre
 
 ### Environment Variables
 
-- `APP_BASE_URL`: Base URL for the CrossFit website (default: "https://crossfit2-rzeszow.cms.efitness.com.pl")
+- `APP_SCRAPER_BASE_URL`: Base URL for the CrossFit website (default: "https://crossfit2-rzeszow.cms.efitness.com.pl")
 - `APP_DEBUG`: Enable debug mode (default: false)
 - `APP_AUTH_TOKEN`: Authentication token required for API access (default: "default-token-change-me")
+- `APP_ENABLE_SWAGGER`: Enable Swagger UI documentation (default: true)
 
 ### Setting Environment Variables
 

@@ -1,12 +1,14 @@
 import logging
 import re
-from datetime import datetime, timedelta, date
+from datetime import date, datetime, timedelta
 from typing import List, Optional
 
 import aiohttp
 from bs4 import BeautifulSoup
 from dateutil.parser import parse as parse_date
 from pydantic import BaseModel
+
+from crossfit_timetable.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +19,7 @@ class ClassItem(BaseModel):
     coach: str
     duration_min: Optional[int]
     source_url: str
+    location: Optional[str] = None  # Location from website
 
 
 class CrossfitScraper:
@@ -72,15 +75,67 @@ class CrossfitScraper:
             return parse_date(match.group(0)).date()
         return None
 
+    async def fetch_location(self, base_url: str) -> Optional[str]:
+        """Fetch the location/address from the website's address section."""
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    base_url, timeout=aiohttp.ClientTimeout(total=30)
+                ) as resp:
+                    resp.raise_for_status()
+                    html = await resp.text()
+
+            soup = BeautifulSoup(html, "lxml")
+
+            # Find the address section
+            address_section = soup.find("address")
+            if not address_section:
+                logger.warning("Address section not found on the page.")
+                return None
+
+            # Extract address lines from paragraphs
+            paragraphs = address_section.find_all("p")
+            address_lines = []
+
+            for p in paragraphs:
+                text = p.get_text(strip=True)
+                # Skip empty lines and the "Kontakt" header
+                if text and text != "Kontakt":
+                    address_lines.append(text)
+
+            if address_lines:
+                # Format: street, postal_code city
+                # Remove the gym name (first line if it contains "CrossFit")
+                filtered_lines = [
+                    line
+                    for line in address_lines
+                    if line and line != "CrossFit Rzeszów 2.0"
+                ]
+                if filtered_lines:
+                    # Join address lines with proper formatting
+                    address = ", ".join(filtered_lines)
+                    # Add Poland if not already present
+                    if "Poland" not in address:
+                        address += ", Poland"
+                    logger.info(f"Fetched location: {address}")
+                    return address
+        except Exception as e:
+            logger.warning(f"Failed to fetch location from website: {e}")
+            return None
+
     async def fetch_timetable(
         self, start_date: Optional[date] = None
     ) -> List[ClassItem]:
         """Fetch and parse the CrossFit timetable from the website."""
         monday = self.get_valid_monday(start_date)
-        url = f"https://crossfit2-rzeszow.cms.efitness.com.pl/kalendarz-zajec?day={monday}&view=Agenda"
+        base_url = settings.scraper_base_url
+        url = f"{base_url}/kalendarz-zajec?day={monday}&view=Agenda"
 
         logger.info(f"Fetching timetable for week starting {monday}")
         logger.debug(f"Requesting URL: {url}")
+
+        # Fetch location from website
+        location = await self.fetch_location(base_url)
 
         async with aiohttp.ClientSession() as session:
             async with session.get(
@@ -154,12 +209,20 @@ class CrossfitScraper:
                     coach = text
                     break
 
+            # Extract source URL from the schedule-agenda-link
+            schedule_link = content_cell.find("a", class_="schedule-agenda-link")
+            source_url = url
+            if schedule_link and schedule_link.has_attr("href"):
+                relative_href = schedule_link.get("href")
+                source_url = f"{base_url}{relative_href}"
+
             item = ClassItem(
                 date=full_datetime,
                 event_name=event_name,
                 coach=coach,
                 duration_min=duration_min,
-                source_url=url,
+                source_url=source_url,
+                location=location,
             )
             records.append(item)
 

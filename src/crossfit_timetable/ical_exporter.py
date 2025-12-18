@@ -72,7 +72,9 @@ class ICalExporter:
             event.add("summary", f"CrossFit: {class_item.event_name}")
             event.add("dtstart", start_time)
             event.add("dtend", end_time)
-            event.add("location", "CrossFit 2 Rzeszów")
+            # Use location from scraper if available, otherwise use fallback
+            location = class_item.location or "CrossFit 2.0 Rzeszów"
+            event.add("location", location)
             event.add(
                 "description",
                 f"CrossFit Class\nCoach: {class_item.coach}\nSource: {class_item.source_url}",
