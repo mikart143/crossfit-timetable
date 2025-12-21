@@ -100,11 +100,8 @@ async def get_timetable(
 
         timeout = aiohttp.ClientTimeout(total=30)
         async with aiohttp.ClientSession(timeout=timeout) as session:
-            location = await scraper.fetch_location(
-                settings.scraper_base_url, session=session
-            )
             week_tasks = [
-                scraper.fetch_timetable(monday, session=session, location=location)
+                scraper.fetch_timetable(monday, session=session)
                 for monday in mondays
             ]
             week_results = await asyncio.gather(*week_tasks)
@@ -137,11 +134,8 @@ async def get_ical(
 
         timeout = aiohttp.ClientTimeout(total=30)
         async with aiohttp.ClientSession(timeout=timeout) as session:
-            location = await scraper.fetch_location(
-                settings.scraper_base_url, session=session
-            )
             week_tasks = [
-                scraper.fetch_timetable(monday, session=session, location=location)
+                scraper.fetch_timetable(monday, session=session)
                 for monday in mondays
             ]
             week_results = await asyncio.gather(*week_tasks)

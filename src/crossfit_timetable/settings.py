@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     # Base URL for the CrossFit timetable scraper
     scraper_base_url: str = "https://crossfit2-rzeszow.cms.efitness.com.pl"
 
+    # CrossFit gym location (hardcoded)
+    gym_location: str = "Boya-Żeleńskiego 15, 35-105 Rzeszów, Poland"
+
     # Debug mode flag
     debug: bool = False
 

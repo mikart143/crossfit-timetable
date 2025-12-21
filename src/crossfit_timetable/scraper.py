@@ -84,70 +84,11 @@ class CrossfitScraper:
             return parse_date(match.group(0)).date()
         return None
 
-    async def fetch_location(
-        self, base_url: str, session: Optional[aiohttp.ClientSession] = None
-    ) -> Optional[str]:
-        """Fetch the location/address from the website's address section."""
-        try:
-            # Reuse provided session when possible to reduce overhead
-            if session is None:
-                async with aiohttp.ClientSession(
-                    timeout=aiohttp.ClientTimeout(total=30)
-                ) as own_session:
-                    async with own_session.get(base_url) as resp:
-                        await self._raise_for_status(resp)
-                        html = await resp.text()
-            else:
-                async with session.get(base_url) as resp:
-                    await self._raise_for_status(resp)
-                    html = await resp.text()
-
-            soup = BeautifulSoup(html, "lxml")
-
-            # Find the address section
-            address_section = soup.find("address")
-            if not address_section:
-                logger.warning("Address section not found on the page.")
-                return None
-
-            # Extract address lines from paragraphs
-            paragraphs = address_section.find_all("p")
-            address_lines = []
-
-            for p in paragraphs:
-                text = p.get_text(strip=True)
-                # Skip empty lines and the "Kontakt" header
-                if text and text != "Kontakt":
-                    address_lines.append(text)
-
-            if address_lines:
-                # Format: street, postal_code city
-                # Remove the gym name (first line if it contains "CrossFit")
-                filtered_lines = [
-                    line
-                    for line in address_lines
-                    if line and line != "CrossFit Rzeszów 2.0"
-                ]
-                if filtered_lines:
-                    # Join address lines with proper formatting
-                    address = ", ".join(filtered_lines)
-                    # Add Poland if not already present
-                    if "Poland" not in address:
-                        address += ", Poland"
-                    logger.info(f"Fetched location: {address}")
-                    return address
-        except Exception as e:
-            logger.warning(f"Failed to fetch location from website: {e}")
-            return None
-
-        return None
-
     async def fetch_timetable(
         self,
         start_date: Optional[date] = None,
         *,
         session: Optional[aiohttp.ClientSession] = None,
-        location: Optional[str] = None,
     ) -> List[ClassItem]:
         """Fetch and parse the CrossFit timetable from the website."""
         monday = self.get_valid_monday(start_date)
@@ -157,24 +98,18 @@ class CrossfitScraper:
         logger.info(f"Fetching timetable for week starting {monday}")
         logger.debug(f"Requesting URL: {url}")
 
-        async def ensure_location(
-            active_session: aiohttp.ClientSession,
-        ) -> Optional[str]:
-            if location is not None:
-                return location
-            return await self.fetch_location(base_url, session=active_session)
+        # Use hardcoded location from settings
+        location = settings.gym_location
 
-        # Fetch location from website (cached) and timetable HTML, reusing session if provided
+        # Fetch timetable HTML, reusing session if provided
         if session is None:
             async with aiohttp.ClientSession(
                 timeout=aiohttp.ClientTimeout(total=30)
             ) as own_session:
-                resolved_location = await ensure_location(own_session)
                 async with own_session.get(url) as resp:
                     await self._raise_for_status(resp)
                     html = await resp.text()
         else:
-            resolved_location = await ensure_location(session)
             async with session.get(url) as resp:
                 await self._raise_for_status(resp)
                 html = await resp.text()
@@ -257,7 +192,7 @@ class CrossfitScraper:
                 coach=coach,
                 duration_min=duration_min,
                 source_url=source_url,
-                location=resolved_location,
+                location=location,
             )
             records.append(item)
 
