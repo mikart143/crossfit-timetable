@@ -6,14 +6,9 @@ from zoneinfo import ZoneInfo
 from icalendar import Calendar, Event, Timezone, TimezoneStandard
 
 from .scraper import ClassItem
+from .settings import settings
 
 logger = logging.getLogger(__name__)
-
-# Geographic coordinates for CrossFit 2.0 Rzeszów
-# Source: Boya-Żeleńskiego 15, 35-105 Rzeszów, Poland
-CROSSFIT_RZESZOW_LAT = 50.0386
-CROSSFIT_RZESZOW_LON = 22.0026
-CROSSFIT_RZESZOW_TITLE = "CrossFit 2.0 Rzeszów"
 
 
 class ICalExporter:
@@ -34,7 +29,7 @@ class ICalExporter:
             Formatted geo URI string for X-APPLE-STRUCTURED-LOCATION
         """
         # Build the geo URI with coordinates
-        geo_uri = f"geo:{CROSSFIT_RZESZOW_LAT},{CROSSFIT_RZESZOW_LON}"
+        geo_uri = f"geo:{settings.gym_latitude},{settings.gym_longitude}"
 
         return geo_uri
 
@@ -93,8 +88,8 @@ class ICalExporter:
             event.add("summary", f"CrossFit: {class_item.event_name}")
             event.add("dtstart", start_time)
             event.add("dtend", end_time)
-            # Use location from scraper if available, otherwise use fallback
-            location = class_item.location or "CrossFit 2.0 Rzeszów"
+            # Use location from scraper if available, otherwise use fallback from settings
+            location = class_item.location or settings.gym_title
             event.add("location", location)
             event.add(
                 "description",
@@ -121,7 +116,7 @@ class ICalExporter:
                 parameters={
                     "VALUE": "URI",
                     "X-ADDRESS": address_formatted,
-                    "X-TITLE": CROSSFIT_RZESZOW_TITLE,
+                    "X-TITLE": settings.gym_title,
                     "X-APPLE-RADIUS": "49.91",  # ~50 meters radius
                 },
             )

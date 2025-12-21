@@ -17,6 +17,13 @@ class Settings(BaseSettings):
     # CrossFit gym location (hardcoded)
     gym_location: str = "Boya-Żeleńskiego 15, 35-105 Rzeszów, Poland"
 
+    # Geographic coordinates for CrossFit 2.0 Rzeszów
+    gym_latitude: float = 50.0386
+    gym_longitude: float = 22.0026
+
+    # CrossFit gym title for calendar entries
+    gym_title: str = "CrossFit 2.0 Rzeszów"
+
     # Debug mode flag
     debug: bool = False
 
