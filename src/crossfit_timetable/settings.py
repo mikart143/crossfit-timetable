@@ -18,10 +18,13 @@ class Settings(BaseSettings):
     gym_location: str = "Boya-Żeleńskiego 15, 35-105 Rzeszów, Poland"
 
     # Geographic coordinates for CrossFit 2.0 Rzeszów
+    # Source: Boya-Żeleńskiego 15, 35-105 Rzeszów, Poland
+    # Used for X-APPLE-STRUCTURED-LOCATION in iCal exports
     gym_latitude: float = 50.0386
     gym_longitude: float = 22.0026
 
     # CrossFit gym title for calendar entries
+    # Used as display name in X-APPLE-STRUCTURED-LOCATION
     gym_title: str = "CrossFit 2.0 Rzeszów"
 
     # Debug mode flag

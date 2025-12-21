@@ -89,7 +89,7 @@ class ICalExporter:
             event.add("dtstart", start_time)
             event.add("dtend", end_time)
             # Use location from scraper if available, otherwise use fallback from settings
-            location = class_item.location or settings.gym_title
+            location = class_item.location or settings.gym_location
             event.add("location", location)
             event.add(
                 "description",
