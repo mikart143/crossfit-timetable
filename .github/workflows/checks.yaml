@@ -22,22 +22,34 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v6
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
         with:
-          python-version-file: "pyproject.toml"
+          components: rustfmt, clippy
 
-      - name: Install dependencies
-        run: uv sync --all-extras --dev --locked
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Lint project
-        run: uv run ruff check --output-format=github
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Check project formatting
-        run: uv run ruff format --check
+        run: cargo fmt --all -- --check
+
+      - name: Lint project with Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
 
   tests:
     runs-on: ubuntu-latest
@@ -49,25 +61,42 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v6
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - name: Cache cargo registry
+        uses: actions/cache@v4
         with:
-          python-version-file: "pyproject.toml"
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Install dependencies
-        run: uv sync --all-extras --dev --locked
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Run tests
-        run: uv run pytest --cov-report "xml:coverage.xml" --cov=. --ctrf=report.json tests/
+        run: cargo test --all-features
 
-      - name: Pytest coverage comment
+      - name: Install cargo-tarpaulin
+        run: cargo install cargo-tarpaulin
+
+      - name: Generate code coverage
+        run: cargo tarpaulin --out Xml --output-dir .
+
+      - name: Upload coverage to Codecov
         if: ${{ !cancelled() && github.event_name == 'pull_request' }}
-        uses: MishaKav/pytest-coverage-comment@v1
+        uses: codecov/codecov-action@v5
         with:
-          pytest-xml-coverage-path: ./coverage.xml
+          file: ./cobertura.xml
+          fail_ci_if_error: false
 
       - name: Publish Test Report
         uses: ctrf-io/github-test-reporter@v1

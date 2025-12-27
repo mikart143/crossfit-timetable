@@ -1,187 +1,101 @@
-# CrossFit Timetable API
+# CrossFit Timetable API (Rust)
 
-A FastAPI-based web service for extracting CrossFit class timetables from the CrossFit 2 Rzeszów website.
+Rust reimplementation of the CrossFit timetable service. It scrapes the CrossFit 2 Rzeszów agenda view, exposes it over HTTP via Axum, and can export results to JSON or iCal.
 
 ## Features
+- **Axum-based REST API** with health and info endpoints
+- **Token authentication** via `Authorization: Bearer <token>` header or `?token=<token>` query parameter
+- **Week selection** (`weeks=1-6`, default=1) starting from the current week (Mondays only)
+- **HTML scraping** with `reqwest` + `scraper` for agenda data and location extraction
+- **iCal export** built with `icalendar` crate (timezone: Europe/Warsaw)
+- **OpenAPI/Swagger UI** documentation (enabled by default at `/docs`)
+- **Comprehensive test suite** covering parsing, authentication, and iCal generation
 
-- **REST API**: FastAPI-based web service with automatic OpenAPI documentation
-- **Authentication**: Simple token-based authentication for API access
-- **Parametrized Week Selection**: Fetch timetables for 1–6 weeks starting from the current week
-- **Date Validation**: Ensures dates are Mondays and not more than 2 weeks in the past
-- **Multiple Output Formats**: JSON data and iCal calendar export
-- **Pydantic Models**: Type-safe data models with validation
-- **Comprehensive Testing**: Full unit test coverage
+## Prerequisites
+- Rust toolchain (https://rustup.rs)
 
-## Installation
+## Running
 
-This project uses [uv](https://github.com/astral-sh/uv) for dependency management.
-
+### Quick Start
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd crossfit-timetable
-
-# Install dependencies
-uv sync
-
-# Install development dependencies (including pytest)
-uv sync --group dev
+# Install dependencies and run with defaults
+cargo run
 ```
 
-## Configuration
-
-The application uses environment variables for configuration with the `APP_` prefix.
-
-### Environment Variables
-
-- `APP_SCRAPER_BASE_URL`: Base URL for the CrossFit website (default: "https://crossfit2-rzeszow.cms.efitness.com.pl")
-- `APP_DEBUG`: Enable debug mode (default: false)
-- `APP_AUTH_TOKEN`: Authentication token required for API access (default: "default-token-change-me")
-- `APP_ENABLE_SWAGGER`: Enable Swagger UI documentation (default: true)
-
-### Setting Environment Variables
-
+### With Custom Configuration
 ```bash
-# Set authentication token
-export APP_AUTH_TOKEN="your-secure-token-here"
-
-# Start the server
-uv run server
+# Custom authentication token, base URL, and port
+APP_AUTH_TOKEN=my-secret-token \
+APP_SCRAPER_BASE_URL=https://example.com/api \
+APP_PORT=3000 \
+cargo run
 ```
 
-### API Endpoints
+### Running Tests
+```bash
+# Run all tests
+cargo test
 
-#### GET `/`
-Returns basic API information. (No authentication required)
-
-**Response:**
-```json
-{
-  "message": "CrossFit Timetable API",
-  "endpoints": {
-    "/timetable": "Get timetable data as JSON",
-    "/timetable.ical": "Download timetable as iCal file"
-  }
-}
+# Run with output
+cargo test -- --nocapture
 ```
 
-#### GET `/timetable`
-Returns the CrossFit timetable data as JSON. (Authentication required)
+## Configuration (environment variables)
+- `APP_SCRAPER_BASE_URL` — Base URL for the CrossFit 2 agenda (default: `https://crossfit2-rzeszow.cms.efitness.com.pl`)
+- `APP_AUTH_TOKEN` — Token for API authentication (default: `default-token-change-me`)
+- `APP_PORT` — HTTP server port (default: `8080`)
+- `APP_DEBUG` — Enable debug logging (default: `false`)
+- `APP_ENABLE_SWAGGER` — Enable OpenAPI/Swagger UI at `/docs` (default: `true`)
+- `APP_LOCATION` — Optional location string (if not set, fetched from the scraper for JSON endpoint; used for iCal if provided)
 
-**Authentication Options:**
-- Header: `Authorization: Bearer <your-token>`
-- Query parameter: `?token=<your-token>`
+## API
 
-**Query Parameters:**
-- `weeks` (optional): Number of weeks to include (1-6, default 1)
-- `token` (optional): API token (alternative to Authorization header)
+All authenticated routes accept either `Authorization: Bearer <token>` header or `?token=<token>` query parameter.
 
-**Response:**
+### Endpoints
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/` | No | API info and available endpoints |
+| `GET` | `/healthz/live` | No | Liveness probe (always returns 200) |
+| `GET` | `/healthz/ready` | No | Readiness probe (always returns 200) |
+| `GET` | `/timetable?weeks=N` | **Yes** | JSON list of classes for next N weeks (1-6) |
+| `GET` | `/timetable.ical?weeks=N` | **Yes** | iCal file for next N weeks (1-6) |
+| `GET` | `/docs` | No | OpenAPI/Swagger interactive documentation |
+| `GET` | `/openapi.json` | No | OpenAPI spec (JSON) |
+
+### Query Parameters
+- `weeks` (integer, 1-6, default=1) — Number of weeks of classes to fetch starting from the current Monday
+- `token` (string, optional) — Authentication token (alternative to Bearer header)
+
+### Response Formats
+
+**JSON Response** (`/timetable`):
 ```json
 [
   {
-    "date": "2025-11-13T06:00:00",
+    "date": "2025-01-27T06:00:00",
     "event_name": "WOD",
-    "coach": "John Doe",
+    "coach": "Coach Name",
     "duration_min": 60,
-    "source_url": "https://crossfit2-rzeszow.cms.efitness.com.pl/kalendarz-zajec?day=2025-11-11&view=Agenda"
+    "source_url": "https://crossfit2-rzeszow.cms.efitness.com.pl/...",
+    "location": "CrossFit 2 Rzeszów"
   }
 ]
 ```
 
-#### GET `/timetable.ical`
-Returns the CrossFit timetable as an iCal file for calendar import. (Authentication required)
+**iCal Response** (`/timetable.ical`):
+- Content-Type: `text/calendar`
+- Content-Disposition: `attachment; filename=crossfit_timetable.ics`
+- Events default to 1 hour duration if not specified
+- Timezone: Europe/Warsaw
 
-**Authentication Options:**
-- Header: `Authorization: Bearer <your-token>`
-- Query parameter: `?token=<your-token>`
-
-**Query Parameters:**
-- `weeks` (optional): Number of weeks to include (1-6, default 1)
-- `token` (optional): API token (alternative to Authorization header)
-
-**Response:** iCal (.ics) file download
-
-### Examples
-
-```bash
-# Get current week's timetable as JSON (using Bearer token)
-curl -H "Authorization: Bearer your-token-here" http://localhost:8000/timetable
-
-# Get current week's timetable as JSON (using query parameter)
-curl "http://localhost:8000/timetable?token=your-token-here"
-
-# Get next 2 weeks' timetable (Bearer token)
-curl -H "Authorization: Bearer your-token-here" "http://localhost:8000/timetable?weeks=2"
-
-# Get next 2 weeks' timetable (query parameter)
-curl "http://localhost:8000/timetable?weeks=2&token=your-token-here"
-
-# Download iCal file (Bearer token)
-curl -H "Authorization: Bearer your-token-here" -o crossfit.ics http://localhost:8000/timetable.ical
-
-# Download iCal file (query parameter)
-curl -o crossfit.ics "http://localhost:8000/timetable.ical?token=your-token-here"
-
-# Download next 2 weeks' iCal (query parameter)
-curl -o crossfit.ics "http://localhost:8000/timetable.ical?weeks=2&token=your-token-here"
-```
-
-## API Documentation
-
-When the server is running, visit `http://localhost:8000/docs` for interactive API documentation powered by Swagger UI, or `http://localhost:8000/redoc` for ReDoc documentation.
-
-## Testing
-
-The project includes comprehensive unit tests covering all functionality.
-
-### Running Tests
-
-```bash
-# Using pytest directly
-uv run pytest
-
-# Run specific test file
-uv run pytest tests/test_scraper.py
-
-# Run with verbose output
-uv run pytest -v
-```
-
-### Test Coverage
-
-- Date validation logic
-- Text parsing functions
-- HTML table extraction
-- Time slot parsing
-- API endpoint responses
-- Pydantic model validation
-
-## Development
-
-### Project Structure
-
-```
-crossfit-timetable/
-├── src/
-│   └── crossfit_timetable/
-│       ├── __init__.py
-│       ├── scraper.py          # Main scraper implementation
-│       ├── ical_exporter.py    # iCal export functionality
-│       └── main.py            # FastAPI application
-├── tests/
-│   ├── test_scraper.py         # Scraper unit tests
-│   └── test_ical_exporter.py   # iCal export tests
-├── pyproject.toml     # Project configuration
-├── uv.lock           # Dependency lock file
-└── README.md         # This file
-```
-
-### Dependencies
-
-- **Runtime**: aiohttp, beautifulsoup4, lxml, pydantic, python-dateutil, fastapi, uvicorn, icalendar
-- **Development**: pytest
+## Notes
+- Date validation: Only Mondays are supported; no data older than 2 weeks (14 days) in the past is fetched
+- iCal events default to 1 hour duration if unavailable from the source
+- Timezone for iCal generation: Europe/Warsaw
+- The location is fetched from the scraper on each JSON request; for iCal, uses `APP_LOCATION` if set, otherwise fetches from scraper
+- All times are in the scheduler's configured timezone
 
 ## License
-
 MIT

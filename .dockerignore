@@ -1,9 +1,10 @@
 .git
-__pycache__
-.pytest_cache
-*.pyc
-.venv
-dist
-build
+.gitignore
+target/
 .idea
 .vscode
+*.md
+.dockerignore
+Dockerfile
+.env
+.env.*
