@@ -37,6 +37,10 @@ mod tests {
     use super::*;
     use std::env;
 
+    // Note: Environment variable tests use unsafe blocks because env::set_var and
+    // env::remove_var are marked unsafe in Rust 1.32+. These tests may have race
+    // conditions if run in parallel. Consider using `serial_test` crate if needed.
+
     #[test]
     fn test_settings_with_defaults() {
         // Arrange - clear relevant env vars
