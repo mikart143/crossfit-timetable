@@ -22,22 +22,34 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v6
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
         with:
-          python-version-file: "pyproject.toml"
+          components: rustfmt, clippy
 
-      - name: Install dependencies
-        run: uv sync --all-extras --dev --locked
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Lint project
-        run: uv run ruff check --output-format=github
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Check project formatting
-        run: uv run ruff format --check
+        run: cargo fmt --all -- --check
+
+      - name: Lint project with Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
 
   tests:
     runs-on: ubuntu-latest
@@ -49,25 +61,48 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v6
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - name: Install nightly toolchain with llvm-tools-preview
+        uses: dtolnay/rust-toolchain@nightly
         with:
-          python-version-file: "pyproject.toml"
+          components: llvm-tools-preview
 
-      - name: Install dependencies
-        run: uv sync --all-extras --dev --locked
-
-      - name: Run tests
-        run: uv run pytest --cov-report "xml:coverage.xml" --cov=. --ctrf=report.json tests/
-
-      - name: Pytest coverage comment
-        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
-        uses: MishaKav/pytest-coverage-comment@v1
+      - name: Cache cargo registry
+        uses: actions/cache@v4
         with:
-          pytest-xml-coverage-path: ./coverage.xml
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov
+
+      - name: Run tests with coverage
+        run: cargo llvm-cov nextest --all-features --lcov --output-path lcov.info --profile ci
+
+      - name: Convert JUnit to CTRF format
+        if: always()
+        run: npx junit-to-ctrf target/nextest/ci/nextest-results.xml -o report.json
 
       - name: Publish Test Report
         uses: ctrf-io/github-test-reporter@v1

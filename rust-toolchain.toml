@@ -1,0 +1,5 @@
+[toolchain]
+channel = "1.92.0"
+components = ["rustfmt", "clippy"]
+# Note: Nightly toolchain with llvm-tools-preview is installed separately
+# by 'make install-tools' for cargo-llvm-cov code coverage support
