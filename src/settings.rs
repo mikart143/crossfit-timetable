@@ -61,9 +61,9 @@ mod tests {
             settings.scraper_base_url,
             "https://crossfit2-rzeszow.cms.efitness.com.pl"
         );
-        assert_eq!(settings.debug, false);
+        assert!(!settings.debug);
         assert_eq!(settings.auth_token, "default-token-change-me");
-        assert_eq!(settings.enable_swagger, true);
+        assert!(settings.enable_swagger);
         assert_eq!(settings.port, 8080);
         assert_eq!(settings.location, None);
     }
@@ -87,9 +87,9 @@ mod tests {
 
         // Assert struct fields work as expected
         assert_eq!(settings.scraper_base_url, "https://example.com");
-        assert_eq!(settings.debug, true);
+        assert!(settings.debug);
         assert_eq!(settings.auth_token, "test-token-123");
-        assert_eq!(settings.enable_swagger, true);
+        assert!(settings.enable_swagger);
         assert_eq!(settings.port, 9000);
         assert_eq!(settings.location, Some("Test Location".to_string()));
     }
@@ -101,21 +101,21 @@ mod tests {
             env::set_var("APP_DEBUG", "true");
         }
         let settings = Settings::from_env().unwrap();
-        assert_eq!(settings.debug, true);
+        assert!(settings.debug);
 
         // Test false
         unsafe {
             env::set_var("APP_DEBUG", "false");
         }
         let settings = Settings::from_env().unwrap();
-        assert_eq!(settings.debug, false);
+        assert!(!settings.debug);
 
         // Test case insensitivity (depends on config crate behavior)
         unsafe {
             env::set_var("APP_ENABLE_SWAGGER", "True");
         }
         let settings = Settings::from_env().unwrap();
-        assert_eq!(settings.enable_swagger, true);
+        assert!(settings.enable_swagger);
 
         // Cleanup
         unsafe {

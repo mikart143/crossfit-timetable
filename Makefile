@@ -44,3 +44,7 @@ docker-run: docker-build
 
 format:
 	cargo fmt --all
+
+lint:
+	cargo clippy --all-targets --all-features -- -D warnings
+	cargo fmt --all -- --check
