@@ -82,8 +82,15 @@ jobs:
           path: target
           key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Run tests
-        run: cargo test --all-features
+      - name: Install test report converters
+        run: |
+          cargo install cargo2junit
+          npm install -g junit-to-ctrf
+
+      - name: Run tests and generate CTRF report
+        run: |
+          cargo test --all-features -- -Z unstable-options --format json --report-time | cargo2junit > junit.xml
+          junit-to-ctrf junit.xml -o report.json
 
       - name: Install cargo-tarpaulin
         run: cargo install cargo-tarpaulin
