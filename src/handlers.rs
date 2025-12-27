@@ -71,11 +71,9 @@ pub async fn get_timetable(
         .map(|i| current_monday + Duration::weeks(i.into()))
         .collect();
 
-    let futures = mondays.into_iter().map(|monday| {
-        state
-            .scraper
-            .fetch_timetable(Some(monday), None)
-    });
+    let futures = mondays
+        .into_iter()
+        .map(|monday| state.scraper.fetch_timetable(Some(monday), None));
 
     let week_results: Vec<Vec<ClassItem>> = try_join_all(futures).await?;
     let classes: Vec<ClassItem> = week_results.into_iter().flatten().collect();
