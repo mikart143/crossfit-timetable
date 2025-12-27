@@ -65,5 +65,7 @@
     "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached"
   ],
 
+  "postCreateCommand": "make setup",
+
   "remoteUser": "vscode"
 }

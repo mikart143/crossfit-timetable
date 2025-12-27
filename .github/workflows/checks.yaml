@@ -64,6 +64,11 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Install nightly toolchain with llvm-tools-preview
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: llvm-tools-preview
+          
       - name: Cache cargo registry
         uses: actions/cache@v4
         with:
@@ -82,25 +87,28 @@ jobs:
           path: target
           key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Install cargo2junit
-        run: cargo install cargo2junit
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest
 
-      - name: Run tests and generate CTRF report
-        run: |
-          cargo test --all-features -- -Z unstable-options --format json --report-time | cargo2junit > junit.xml
-          npx junit-to-ctrf junit.xml -o report.json
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov
 
-      - name: Install cargo-tarpaulin
-        run: cargo install cargo-tarpaulin
+      - name: Run tests with coverage
+        run: cargo llvm-cov nextest --all-features --lcov --output-path lcov.info --output-file nextest-results.xml --output-format xml
 
-      - name: Generate code coverage
-        run: cargo tarpaulin --out Xml --output-dir .
+      - name: Convert JUnit to CTRF format
+        if: always()
+        run: npx junit-to-ctrf nextest-results.xml -o report.json
 
       - name: Upload coverage to Codecov
         if: ${{ !cancelled() && github.event_name == 'pull_request' }}
         uses: codecov/codecov-action@v5
         with:
-          file: ./cobertura.xml
+          files: ./lcov.info
           fail_ci_if_error: false
 
       - name: Publish Test Report
