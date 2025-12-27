@@ -104,13 +104,6 @@ jobs:
         if: always()
         run: npx junit-to-ctrf target/nextest/ci/nextest-results.xml -o report.json
 
-      - name: Upload coverage to Codecov
-        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
-        uses: codecov/codecov-action@v5
-        with:
-          files: ./lcov.info
-          fail_ci_if_error: false
-
       - name: Publish Test Report
         uses: ctrf-io/github-test-reporter@v1
         if: ${{ !cancelled() && github.event_name == 'pull_request' }}
