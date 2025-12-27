@@ -1,51 +1,36 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Python: FastAPI",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "uvicorn",
-            "args": [
-                "crossfit_timetable.main:app",
-                "--reload",
-                "--host",
-                "0.0.0.0",
-                "--port",
-                "8000"
-            ],
-            "jinja": true,
-            "justMyCode": true,
-            "cwd": "${workspaceFolder}/src"
-        },
-        {
-            "name": "Python: Current File",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${file}",
-            "console": "integratedTerminal",
-            "justMyCode": true
-        },
-        {
-            "name": "Python: Module",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "crossfit_timetable.main",
-            "justMyCode": true,
-            "cwd": "${workspaceFolder}/src"
-        },
-        {
-            "name": "Python: Pytest",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "pytest",
-            "args": [
-                "-v",
-                "tests/"
-            ],
-            "console": "integratedTerminal",
-            "justMyCode": true,
-            "cwd": "${workspaceFolder}"
-        }
-    ]
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": "Debug crossfit-timetable",
+			"cargo": {
+				"args": ["run", "--bin", "crossfit-timetable"],
+				"filter": { "name": "crossfit-timetable", "kind": "bin" }
+			},
+			"args": [],
+			"cwd": "${workspaceFolder}",
+			"env": {
+				"RUST_LOG": "info",
+				"RUST_BACKTRACE": "1"
+			},
+			"sourceLanguages": ["rust"]
+		},
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": "Debug unit tests",
+			"cargo": {
+				"args": ["test", "--no-run", "--message-format=json"],
+				"filter": { "kind": "test" }
+			},
+			"args": [],
+			"cwd": "${workspaceFolder}",
+			"env": {
+				"RUST_BACKTRACE": "1"
+			},
+			"sourceLanguages": ["rust"]
+		}
+	]
 }

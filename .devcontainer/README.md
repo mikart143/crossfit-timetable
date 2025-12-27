@@ -9,63 +9,64 @@ This directory contains the configuration for the VS Code Dev Container for the 
 - Git and common development tools
 
 ### VS Code Extensions
-- **Python Support**: Python extension, Pylance, debugpy
-- **Linting & Formatting**: Ruff
+- **Rust Support**: rust-analyzer, crates
+- **Linting & Formatting**: rustfmt, clippy
 - **Configuration Files**: Even Better TOML, YAML
-- **Development**: GitHub Copilot, REST Client
+- **Development**: GitHub Copilot, REST Client, vscode-lldb (debugger)
 
-### Python Environment
-- **uv**: Fast Python package installer and resolver
-- **Project Dependencies**: Installed automatically via `uv sync`
-- **Dev Dependencies**: pytest, pytest-asyncio, ruff
+### Rust Environment
+- **Rust Toolchain**: Installed via Dev Container features (minimal profile)
+- **Components**: rust-analyzer, rust-src, rustfmt, clippy
+- **Build Dependencies**: gcc, gcc-c++, make, pkgconf-pkg-config, openssl-devel (installed via bash-command feature)
+
+### Docker
+- **Docker-in-Docker**: Docker CLI available for running and managing containers inside the dev container
 
 ### Port Forwarding
-- Port 8000 (FastAPI server) is automatically forwarded
+- Port 8080 is automatically forwarded
 
 ## Getting Started
 
 1. Open the project in VS Code
 2. When prompted, click "Reopen in Container" or run the command "Dev Containers: Reopen in Container"
-3. Wait for the container to build and setup to complete
+3. Wait for the container to build and features to install
 4. Start developing!
 
 ## Running the Application
 
 ```bash
-# Start the FastAPI server
-uv run uvicorn crossfit_timetable.main:app --reload
+# Build and run the application
+cargo run
+
+# Build in release mode
+cargo build --release
 
 # Run tests
-uv run pytest
+cargo test
 
-# Run linting
-uv run ruff check
+# Run clippy linter
+cargo clippy
 
 # Format code
-uv run ruff format
+cargo fmt
 ```
 
 ## Environment Variables
 
-To set your own auth token, create a `.env` file in your local workspace or set it in your shell:
-
-```bash
-export APP_AUTH_TOKEN="your-secure-token"
-```
+Configuration is loaded from environment variables or a `.env` file. Create a `.env` file in your workspace root if needed.
 
 ## Customization
 
 You can customize the dev container by editing:
-- `.devcontainer/devcontainer.json` - Main configuration
-- `.devcontainer/setup.sh` - Post-creation setup script
+- `.devcontainer/devcontainer.json` - Main configuration and feature setup
 
 ## Troubleshooting
 
 ### Container Build Fails
 Try rebuilding the container: Command Palette → "Dev Containers: Rebuild Container"
 
-### Python Not Found
-The container uses a virtual environment at `.venv`. Make sure VS Code is using the correct interpreter: `${workspaceFolder}/.venv/bin/python`
+### Linking Errors (OpenSSL)
+The dev container automatically installs `openssl-devel` via the bash-command feature. If you still get linking errors, ensure the container was fully rebuilt.
 
 ### Port Already in Use
-If port 8000 is already in use, you can change it in the `uvicorn` command or configure a different port in `devcontainer.json`.
+If port 8080 is already in use, you can change the forwarded ports in `devcontainer.json`.

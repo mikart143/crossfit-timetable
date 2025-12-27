@@ -1,46 +1,54 @@
 # ---------- builder ----------
 FROM almalinux/9-minimal:9.7 AS builder
 
-COPY --from=ghcr.io/astral-sh/uv:0.9.18 /uv /uvx /bin/
-
-ENV UV_COMPILE_BYTECODE=1 \
-    UV_LINK_MODE=copy \
-    UV_PYTHON_INSTALL_DIR=/python \
-    UV_PYTHON_PREFERENCE=only-managed
-
 WORKDIR /app
 
-RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=pyproject.toml,target=/app/pyproject.toml,readonly \
-    --mount=type=bind,source=uv.lock,target=/app/uv.lock,readonly \
-    uv sync --locked --no-install-project --no-dev --no-editable
+# Install build dependencies
+RUN microdnf install -y \
+    gcc \
+    gcc-c++ \
+    make \
+    openssl-devel \
+    pkg-config \
+    && microdnf clean all
 
-COPY . /app
+# Install Rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
 
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked --no-dev --no-editable
+# Copy manifests
+COPY Cargo.toml Cargo.lock ./
+
+# Copy source code
+COPY src ./src
+
+# Build for release
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/app/target \
+    cargo build --release && \
+    cp /app/target/release/crossfit-timetable /app/crossfit-timetable
 
 
 # ---------- final ----------
-FROM almalinux/9-micro:9.7  AS final
+FROM almalinux/9-micro:9.7 AS final
 
 # Capture platform information
 ARG TARGETPLATFORM
 ARG TARGETOS
 ARG TARGETARCH
 
-# Copy CA certificates from builder (which has them installed)
-COPY --from=builder /etc/pki /etc/pki
-COPY --from=builder /etc/ssl /etc/ssl
+# Copy CA certificates (rustls is pure Rust, no C libs needed)
+COPY --from=builder /etc/pki/tls/certs/ca-bundle.crt /etc/pki/tls/certs/ca-bundle.crt
 
 # Set SSL certificate environment variables
 ENV SSL_CERT_FILE=/etc/pki/tls/certs/ca-bundle.crt \
-    SSL_CERT_DIR=/etc/pki/tls/certs \
-    REQUESTS_CA_BUNDLE=/etc/pki/tls/certs/ca-bundle.crt
+    SSL_CERT_DIR=/etc/pki/tls/certs
 
-# distroless nonroot user
-COPY --from=builder --chown=nonroot:nonroot /python /python
-COPY --from=builder --chown=nonroot:nonroot /app /app
+# Copy the compiled binary
+COPY --from=builder /app/crossfit-timetable /usr/local/bin/crossfit-timetable
 
-# Use the venv's Python (follows the symlink into /python)
-CMD ["/app/.venv/bin/python", "-m", "uvicorn", "crossfit_timetable.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Use non-root user
+USER 65532:65532
+
+# Run the binary
+CMD ["/usr/local/bin/crossfit-timetable"]

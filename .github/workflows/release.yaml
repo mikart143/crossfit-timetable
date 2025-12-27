@@ -33,11 +33,6 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          enable-cache: true
-
       - name: Semantic Release
         id: semantic
         uses: cycjimmy/semantic-release-action@v6
@@ -85,11 +80,11 @@ jobs:
           labels: |
             org.opencontainers.image.title=CrossFit 2.0 Rzeszów Timetable
             org.opencontainers.image.url=https://github.com/${{ github.repository }}
-            org.opencontainers.image.description=FastAPI-based web service for extracting CrossFit 2.0 Rzeszów class timetables. Release notes: https://github.com/${{ github.repository }}/releases/tag/v${{ needs.release.outputs.new_release_version }}
+            org.opencontainers.image.description=Rust-based web service for extracting CrossFit 2.0 Rzeszów class timetables. Release notes: https://github.com/${{ github.repository }}/releases/tag/v${{ needs.release.outputs.new_release_version }}
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.licenses=MIT
           annotations: |
-            org.opencontainers.image.description=FastAPI-based web service for extracting CrossFit 2.0 Rzeszów class timetables. Release notes: https://github.com/${{ github.repository }}/releases/tag/v${{ needs.release.outputs.new_release_version }}
+            org.opencontainers.image.description=Rust-based web service for extracting CrossFit 2.0 Rzeszów class timetables. Release notes: https://github.com/${{ github.repository }}/releases/tag/v${{ needs.release.outputs.new_release_version }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
