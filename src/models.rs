@@ -12,4 +12,3 @@ pub struct ClassItem {
     pub source_url: String,
     pub location: Option<String>,
 }
-

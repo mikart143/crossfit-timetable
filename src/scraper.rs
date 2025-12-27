@@ -154,7 +154,10 @@ impl CrossfitScraper {
         let event_sel = Selector::parse("p.event_name").unwrap();
         let link_sel = Selector::parse("a.schedule-agenda-link").unwrap();
 
-        let table = document.select(&table_sel).next().ok_or(ScrapeError::MissingTable)?;
+        let table = document
+            .select(&table_sel)
+            .next()
+            .ok_or(ScrapeError::MissingTable)?;
 
         let mut current_date: Option<NaiveDate> = None;
         let mut records: Vec<ClassItem> = Vec::new();
@@ -166,15 +169,22 @@ impl CrossfitScraper {
             }
 
             let (time_cell, content_cell) = if cells[0].value().attr("rowspan").is_some() {
-                let date_text = cells[0].text().collect::<Vec<_>>().join("").trim().to_string();
+                let date_text = cells[0]
+                    .text()
+                    .collect::<Vec<_>>()
+                    .join("")
+                    .trim()
+                    .to_string();
                 current_date = self.parse_agenda_date(&date_text);
                 if current_date.is_none() {
                     continue;
                 }
                 if let Some(date_val) = current_date
-                    && (date_val < expected_monday || date_val > expected_monday + chrono::Duration::days(6)) {
-                        continue;
-                    }
+                    && (date_val < expected_monday
+                        || date_val > expected_monday + chrono::Duration::days(6))
+                {
+                    continue;
+                }
                 (cells.get(1), cells.get(2))
             } else {
                 (cells.first(), cells.get(1))
@@ -184,7 +194,12 @@ impl CrossfitScraper {
                 continue;
             };
 
-            let time_range = time_cell.text().collect::<Vec<_>>().join("").trim().to_string();
+            let time_range = time_cell
+                .text()
+                .collect::<Vec<_>>()
+                .join("")
+                .trim()
+                .to_string();
             let duration_min = self.parse_time_range(&time_range);
 
             let start_time_str = time_range.split('-').next().unwrap_or("").trim();
@@ -194,24 +209,39 @@ impl CrossfitScraper {
             }
             let hour = time_parts[0].parse::<u32>().ok();
             let minute = time_parts[1].parse::<u32>().ok();
-            let Some(date_base) = current_date else { continue; };
+            let Some(date_base) = current_date else {
+                continue;
+            };
             let start_dt = match (hour, minute) {
                 (Some(h), Some(m)) => {
-                    let Some(time) = NaiveTime::from_hms_opt(h, m, 0) else { continue; };
+                    let Some(time) = NaiveTime::from_hms_opt(h, m, 0) else {
+                        continue;
+                    };
                     NaiveDateTime::new(date_base, time)
                 }
                 _ => continue,
             };
 
             let event_elem = content_cell.select(&event_sel).next();
-            let Some(event_elem) = event_elem else { continue; };
-            let event_name = event_elem.text().collect::<Vec<_>>().join("").trim().to_string();
+            let Some(event_elem) = event_elem else {
+                continue;
+            };
+            let event_name = event_elem
+                .text()
+                .collect::<Vec<_>>()
+                .join("")
+                .trim()
+                .to_string();
             if event_name.is_empty() {
                 continue;
             }
 
             let mut coach = String::new();
-            for text in content_cell.text().map(|t| t.trim()).filter(|t| !t.is_empty()) {
+            for text in content_cell
+                .text()
+                .map(|t| t.trim())
+                .filter(|t| !t.is_empty())
+            {
                 if text == event_name {
                     continue;
                 }
@@ -226,19 +256,22 @@ impl CrossfitScraper {
                 .map(|href| format!("{}{}", self.base_url, href))
                 .unwrap_or_else(|| source_url.to_string());
 
-            records.push(
-                ClassItem {
-                    date: start_dt,
-                    event_name: event_name.clone(),
-                    coach,
-                    duration_min,
-                    source_url,
-                    location: location.clone(),
-                }
-            );
+            records.push(ClassItem {
+                date: start_dt,
+                event_name: event_name.clone(),
+                coach,
+                duration_min,
+                source_url,
+                location: location.clone(),
+            });
         }
 
-        records.sort_by(|a, b| a.date.cmp(&b.date).then(a.event_name.cmp(&b.event_name)).then(a.coach.cmp(&b.coach)));
+        records.sort_by(|a, b| {
+            a.date
+                .cmp(&b.date)
+                .then(a.event_name.cmp(&b.event_name))
+                .then(a.coach.cmp(&b.coach))
+        });
         Ok(records)
     }
 }
@@ -251,7 +284,10 @@ mod tests {
     fn test_get_valid_monday_valid() {
         let today = chrono::Local::now().date_naive();
         let monday = today - chrono::Duration::days(today.weekday().num_days_from_monday() as i64);
-        assert_eq!(CrossfitScraper::get_valid_monday(Some(monday)).unwrap(), monday);
+        assert_eq!(
+            CrossfitScraper::get_valid_monday(Some(monday)).unwrap(),
+            monday
+        );
     }
 
     #[test]
