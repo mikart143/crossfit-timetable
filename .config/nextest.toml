@@ -17,3 +17,9 @@ success-output = "never"
 fail-fast = false
 # Run tests with 2 threads in CI
 test-threads = 2
+
+[profile.ci.junit]
+path = "nextest-results.xml"
+store-success-output = false
+store-failure-output = true
+

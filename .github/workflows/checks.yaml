@@ -68,7 +68,7 @@ jobs:
         uses: dtolnay/rust-toolchain@nightly
         with:
           components: llvm-tools-preview
-          
+
       - name: Cache cargo registry
         uses: actions/cache@v4
         with:
@@ -98,11 +98,11 @@ jobs:
           tool: cargo-llvm-cov
 
       - name: Run tests with coverage
-        run: cargo llvm-cov nextest --all-features --lcov --output-path lcov.info --output-file nextest-results.xml --output-format xml
+        run: cargo llvm-cov nextest --all-features --lcov --output-path lcov.info --profile ci
 
       - name: Convert JUnit to CTRF format
         if: always()
-        run: npx junit-to-ctrf nextest-results.xml -o report.json
+        run: npx junit-to-ctrf target/nextest/ci/nextest-results.xml -o report.json
 
       - name: Upload coverage to Codecov
         if: ${{ !cancelled() && github.event_name == 'pull_request' }}
