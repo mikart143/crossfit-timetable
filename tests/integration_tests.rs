@@ -2,10 +2,10 @@ use axum::{
     body::Body,
     http::{Request, StatusCode, header},
 };
-use crossfit_timetable::{build_router, AppState};
 use crossfit_timetable::ical::ICalExporter;
 use crossfit_timetable::scraper::CrossfitScraper;
 use crossfit_timetable::settings::Settings;
+use crossfit_timetable::{AppState, build_router};
 use httpmock::prelude::*;
 use std::sync::Arc;
 use tower::Service;
@@ -42,18 +42,13 @@ async fn test_root_endpoint() {
 
     // Act
     let response = app
-        .call(
-            Request::builder()
-                .uri("/")
-                .body(Body::empty())
-                .unwrap(),
-        )
+        .call(Request::builder().uri("/").body(Body::empty()).unwrap())
         .await
         .unwrap();
 
     // Assert
     assert_eq!(response.status(), StatusCode::OK);
-    
+
     let body = response_body_string(response.into_body()).await;
     assert!(body.contains("CrossFit Timetable API"));
     assert!(body.contains("/timetable"));
@@ -79,7 +74,7 @@ async fn test_healthz_ready() {
 
     // Assert
     assert_eq!(response.status(), StatusCode::OK);
-    
+
     let body = response_body_string(response.into_body()).await;
     assert!(body.contains(r#""status":"ok"#));
 }
@@ -103,7 +98,7 @@ async fn test_healthz_live() {
 
     // Assert
     assert_eq!(response.status(), StatusCode::OK);
-    
+
     let body = response_body_string(response.into_body()).await;
     assert!(body.contains(r#""status":"ok"#));
 }
@@ -155,11 +150,10 @@ async fn test_timetable_valid_auth_bearer() {
     // Arrange
     let mock_server = MockServer::start();
     let state = create_test_state(mock_server.base_url());
-    
+
     // Mock the scraper response with empty classes (will result in 404)
     mock_server.mock(|when, then| {
-        when.method(GET)
-            .path_matches("kalendarz");
+        when.method(GET).path_matches("kalendarz");
         then.status(200)
             .body(r#"<html><body><table class="calendar_table_agenda"></table></body></html>"#);
     });
@@ -187,11 +181,10 @@ async fn test_timetable_valid_auth_query() {
     // Arrange
     let mock_server = MockServer::start();
     let state = create_test_state(mock_server.base_url());
-    
+
     // Mock the scraper response
     mock_server.mock(|when, then| {
-        when.method(GET)
-            .path_matches("kalendarz");
+        when.method(GET).path_matches("kalendarz");
         then.status(200)
             .body(r#"<html><body><table class="calendar_table_agenda"></table></body></html>"#);
     });
@@ -260,12 +253,12 @@ async fn test_timetable_with_single_class() {
     // Arrange
     let mock_server = MockServer::start();
     let state = create_test_state(mock_server.base_url());
-    
+
     // Get the current Monday
-    use chrono::{Local, Datelike, Duration as ChronoDuration};
+    use chrono::{Datelike, Duration as ChronoDuration, Local};
     let today = Local::now().date_naive();
     let monday = today - ChronoDuration::days(today.weekday().num_days_from_monday() as i64);
-    
+
     // Mock response with a single class (using current Monday)
     let html_response = format!(
         r#"
@@ -286,12 +279,10 @@ async fn test_timetable_with_single_class() {
     "#,
         monday.format("%Y-%m-%d")
     );
-    
+
     mock_server.mock(|when, then| {
-        when.method(GET)
-            .path_matches("kalendarz");
-        then.status(200)
-            .body(html_response.as_str());
+        when.method(GET).path_matches("kalendarz");
+        then.status(200).body(html_response.as_str());
     });
 
     let mut app = build_router(state);
@@ -309,7 +300,7 @@ async fn test_timetable_with_single_class() {
 
     // Assert
     assert_eq!(response.status(), StatusCode::OK);
-    
+
     let body = response_body_string(response.into_body()).await;
     assert!(body.contains("WOD"));
     assert!(body.contains("Tomasz Nowosielski"));
@@ -320,12 +311,12 @@ async fn test_timetable_with_multiple_classes() {
     // Arrange
     let mock_server = MockServer::start();
     let state = create_test_state(mock_server.base_url());
-    
+
     // Get the current Monday
-    use chrono::{Local, Datelike, Duration as ChronoDuration};
+    use chrono::{Datelike, Duration as ChronoDuration, Local};
     let today = Local::now().date_naive();
     let monday = today - ChronoDuration::days(today.weekday().num_days_from_monday() as i64);
-    
+
     // Mock response with multiple classes
     let html_response = format!(
         r#"
@@ -353,12 +344,10 @@ async fn test_timetable_with_multiple_classes() {
     "#,
         monday.format("%Y-%m-%d")
     );
-    
+
     mock_server.mock(|when, then| {
-        when.method(GET)
-            .path_matches("kalendarz");
-        then.status(200)
-            .body(html_response.as_str());
+        when.method(GET).path_matches("kalendarz");
+        then.status(200).body(html_response.as_str());
     });
 
     let mut app = build_router(state);
@@ -376,7 +365,7 @@ async fn test_timetable_with_multiple_classes() {
 
     // Assert
     assert_eq!(response.status(), StatusCode::OK);
-    
+
     let body = response_body_string(response.into_body()).await;
     assert!(body.contains("WOD"));
     assert!(body.contains("HYROX"));
@@ -410,11 +399,10 @@ async fn test_ical_endpoint_empty_classes() {
     // Arrange
     let mock_server = MockServer::start();
     let state = create_test_state(mock_server.base_url());
-    
+
     // Mock empty response
     mock_server.mock(|when, then| {
-        when.method(GET)
-            .path_matches("kalendarz");
+        when.method(GET).path_matches("kalendarz");
         then.status(200)
             .body(r#"<html><body><table class="calendar_table_agenda"></table></body></html>"#);
     });
@@ -441,12 +429,12 @@ async fn test_ical_endpoint_with_classes() {
     // Arrange
     let mock_server = MockServer::start();
     let state = create_test_state(mock_server.base_url());
-    
+
     // Get the current Monday
-    use chrono::{Local, Datelike, Duration as ChronoDuration};
+    use chrono::{Datelike, Duration as ChronoDuration, Local};
     let today = Local::now().date_naive();
     let monday = today - ChronoDuration::days(today.weekday().num_days_from_monday() as i64);
-    
+
     // Mock response with classes
     let html_response = format!(
         r#"
@@ -467,12 +455,10 @@ async fn test_ical_endpoint_with_classes() {
     "#,
         monday.format("%Y-%m-%d")
     );
-    
+
     mock_server.mock(|when, then| {
-        when.method(GET)
-            .path_matches("kalendarz");
-        then.status(200)
-            .body(html_response.as_str());
+        when.method(GET).path_matches("kalendarz");
+        then.status(200).body(html_response.as_str());
     });
 
     let mut app = build_router(state);
@@ -490,15 +476,20 @@ async fn test_ical_endpoint_with_classes() {
 
     // Assert
     assert_eq!(response.status(), StatusCode::OK);
-    
+
     // Check content type
     let content_type = response.headers().get(header::CONTENT_TYPE).unwrap();
     assert_eq!(content_type, "text/calendar");
-    
+
     // Check content disposition
     let content_disposition = response.headers().get(header::CONTENT_DISPOSITION).unwrap();
-    assert!(content_disposition.to_str().unwrap().contains("crossfit_timetable.ics"));
-    
+    assert!(
+        content_disposition
+            .to_str()
+            .unwrap()
+            .contains("crossfit_timetable.ics")
+    );
+
     // Check body contains iCal format
     let body = response_body_string(response.into_body()).await;
     assert!(body.contains("BEGIN:VCALENDAR"));
@@ -511,12 +502,12 @@ async fn test_ical_endpoint_multiple_weeks() {
     // Arrange
     let mock_server = MockServer::start();
     let state = create_test_state(mock_server.base_url());
-    
+
     // Get the current Monday
-    use chrono::{Local, Datelike, Duration as ChronoDuration};
+    use chrono::{Datelike, Duration as ChronoDuration, Local};
     let today = Local::now().date_naive();
     let monday = today - ChronoDuration::days(today.weekday().num_days_from_monday() as i64);
-    
+
     // Mock response with classes
     let html_response = format!(
         r#"
@@ -537,12 +528,10 @@ async fn test_ical_endpoint_multiple_weeks() {
     "#,
         monday.format("%Y-%m-%d")
     );
-    
+
     mock_server.mock(|when, then| {
-        when.method(GET)
-            .path_matches("kalendarz");
-        then.status(200)
-            .body(html_response.as_str());
+        when.method(GET).path_matches("kalendarz");
+        then.status(200).body(html_response.as_str());
     });
 
     let mut app = build_router(state);
@@ -560,7 +549,7 @@ async fn test_ical_endpoint_multiple_weeks() {
 
     // Assert
     assert_eq!(response.status(), StatusCode::OK);
-    
+
     let body = response_body_string(response.into_body()).await;
     assert!(body.contains("BEGIN:VCALENDAR"));
 }

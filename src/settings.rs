@@ -74,7 +74,7 @@ mod tests {
         // Note: Environment variable testing is tricky because the config library
         // reads them at build time, not when set_var is called in the test.
         // This test mainly verifies the struct fields are configurable.
-        
+
         // Create a Settings struct directly to verify the fields
         let settings = Settings {
             scraper_base_url: "https://example.com".to_string(),

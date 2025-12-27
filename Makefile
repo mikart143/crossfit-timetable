@@ -41,3 +41,6 @@ docker-build:
 
 docker-run: docker-build
 	docker run -p 8080:8080 crossfit-timetable
+
+format:
+	cargo fmt --all
