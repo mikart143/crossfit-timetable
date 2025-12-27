@@ -26,9 +26,9 @@ use crate::settings::Settings;
 
 #[derive(Clone)]
 pub struct AppState {
-    pub(crate) settings: Settings,
-    pub(crate) scraper: Arc<CrossfitScraper>,
-    pub(crate) exporter: Arc<ICalExporter>,
+    pub settings: Settings,
+    pub scraper: Arc<CrossfitScraper>,
+    pub exporter: Arc<ICalExporter>,
 }
 
 pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
@@ -55,7 +55,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-pub(crate) fn build_router(state: AppState) -> Router {
+pub fn build_router(state: AppState) -> Router {
     let trace_layer = TraceLayer::new_for_http()
         .make_span_with(DefaultMakeSpan::new().level(Level::INFO))
         .on_response(
