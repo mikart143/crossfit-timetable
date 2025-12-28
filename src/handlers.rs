@@ -132,7 +132,7 @@ pub async fn get_ical(
         return Err(ApiError::NotFound("No classes found".into()));
     }
 
-    let body = state.exporter.generate(&classes);
+    let body = state.exporter.generate(&classes, &state.settings);
     Ok((
         StatusCode::OK,
         [
