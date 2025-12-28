@@ -19,6 +19,10 @@ fn create_test_state(mock_server_url: String) -> AppState {
         enable_swagger: true,
         port: 8080,
         location: Some("Test Location".to_string()),
+        gym_latitude: 50.0386,
+        gym_longitude: 22.0026,
+        gym_title: "CrossFit 2.0 Rzeszów".to_string(),
+        gym_location: "Boya-Żeleńskiego 15, 35-105 Rzeszów, Poland".to_string(),
     };
 
     AppState {

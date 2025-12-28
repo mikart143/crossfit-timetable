@@ -33,6 +33,10 @@ mod tests {
             enable_swagger: true,
             port: 8080,
             location: None,
+            gym_latitude: 50.0386,
+            gym_longitude: 22.0026,
+            gym_title: "CrossFit 2.0 Rzeszów".to_string(),
+            gym_location: "Boya-Żeleńskiego 15, 35-105 Rzeszów, Poland".to_string(),
         };
         let auth = Authorization::bearer("secret").unwrap();
         assert!(verify_token(&settings, Some(auth), None).is_ok());
@@ -47,6 +51,10 @@ mod tests {
             enable_swagger: true,
             port: 8080,
             location: None,
+            gym_latitude: 50.0386,
+            gym_longitude: 22.0026,
+            gym_title: "CrossFit 2.0 Rzeszów".to_string(),
+            gym_location: "Boya-Żeleńskiego 15, 35-105 Rzeszów, Poland".to_string(),
         };
         assert!(verify_token(&settings, None, Some("secret")).is_ok());
         assert!(verify_token(&settings, None, Some("bad")).is_err());

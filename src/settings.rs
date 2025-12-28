@@ -9,6 +9,16 @@ pub struct Settings {
     pub enable_swagger: bool,
     pub port: u16,
     pub location: Option<String>,
+    // Geographic coordinates for CrossFit 2.0 Rzeszów
+    // Source: Boya-Żeleńskiego 15, 35-105 Rzeszów, Poland
+    // Used for X-APPLE-STRUCTURED-LOCATION in iCal exports
+    pub gym_latitude: f64,
+    pub gym_longitude: f64,
+    // CrossFit gym title for calendar entries
+    // Used as display name in X-APPLE-STRUCTURED-LOCATION
+    pub gym_title: String,
+    // CrossFit gym location address (hardcoded)
+    pub gym_location: String,
 }
 
 impl Settings {
@@ -26,6 +36,13 @@ impl Settings {
             .set_default("auth_token", "default-token-change-me")?
             .set_default("enable_swagger", true)?
             .set_default("port", 8080)?
+            .set_default("gym_latitude", 50.0386)?
+            .set_default("gym_longitude", 22.0026)?
+            .set_default("gym_title", "CrossFit 2.0 Rzeszów")?
+            .set_default(
+                "gym_location",
+                "Boya-Żeleńskiego 15, 35-105 Rzeszów, Poland",
+            )?
             .build()?;
 
         config.try_deserialize()
@@ -51,6 +68,10 @@ mod tests {
             env::remove_var("APP_ENABLE_SWAGGER");
             env::remove_var("APP_PORT");
             env::remove_var("APP_LOCATION");
+            env::remove_var("APP_GYM_LATITUDE");
+            env::remove_var("APP_GYM_LONGITUDE");
+            env::remove_var("APP_GYM_TITLE");
+            env::remove_var("APP_GYM_LOCATION");
         }
 
         // Act
@@ -66,6 +87,13 @@ mod tests {
         assert!(settings.enable_swagger);
         assert_eq!(settings.port, 8080);
         assert_eq!(settings.location, None);
+        assert_eq!(settings.gym_latitude, 50.0386);
+        assert_eq!(settings.gym_longitude, 22.0026);
+        assert_eq!(settings.gym_title, "CrossFit 2.0 Rzeszów");
+        assert_eq!(
+            settings.gym_location,
+            "Boya-Żeleńskiego 15, 35-105 Rzeszów, Poland"
+        );
     }
 
     #[test]
@@ -83,6 +111,10 @@ mod tests {
             enable_swagger: true,
             port: 9000,
             location: Some("Test Location".to_string()),
+            gym_latitude: 50.0386,
+            gym_longitude: 22.0026,
+            gym_title: "CrossFit 2.0 Rzeszów".to_string(),
+            gym_location: "Boya-Żeleńskiego 15, 35-105 Rzeszów, Poland".to_string(),
         };
 
         // Assert struct fields work as expected
@@ -92,6 +124,13 @@ mod tests {
         assert!(settings.enable_swagger);
         assert_eq!(settings.port, 9000);
         assert_eq!(settings.location, Some("Test Location".to_string()));
+        assert_eq!(settings.gym_latitude, 50.0386);
+        assert_eq!(settings.gym_longitude, 22.0026);
+        assert_eq!(settings.gym_title, "CrossFit 2.0 Rzeszów");
+        assert_eq!(
+            settings.gym_location,
+            "Boya-Żeleńskiego 15, 35-105 Rzeszów, Poland"
+        );
     }
 
     #[test]
