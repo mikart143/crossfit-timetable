@@ -39,7 +39,10 @@ impl Settings {
             .set_default("gym_latitude", 50.0386)?
             .set_default("gym_longitude", 22.0026)?
             .set_default("gym_title", "CrossFit 2.0 Rzeszów")?
-            .set_default("gym_location", "Boya-Żeleńskiego 15, 35-105 Rzeszów, Poland")?
+            .set_default(
+                "gym_location",
+                "Boya-Żeleńskiego 15, 35-105 Rzeszów, Poland",
+            )?
             .build()?;
 
         config.try_deserialize()
@@ -87,7 +90,10 @@ mod tests {
         assert_eq!(settings.gym_latitude, 50.0386);
         assert_eq!(settings.gym_longitude, 22.0026);
         assert_eq!(settings.gym_title, "CrossFit 2.0 Rzeszów");
-        assert_eq!(settings.gym_location, "Boya-Żeleńskiego 15, 35-105 Rzeszów, Poland");
+        assert_eq!(
+            settings.gym_location,
+            "Boya-Żeleńskiego 15, 35-105 Rzeszów, Poland"
+        );
     }
 
     #[test]
@@ -121,7 +127,10 @@ mod tests {
         assert_eq!(settings.gym_latitude, 50.0386);
         assert_eq!(settings.gym_longitude, 22.0026);
         assert_eq!(settings.gym_title, "CrossFit 2.0 Rzeszów");
-        assert_eq!(settings.gym_location, "Boya-Żeleńskiego 15, 35-105 Rzeszów, Poland");
+        assert_eq!(
+            settings.gym_location,
+            "Boya-Żeleńskiego 15, 35-105 Rzeszów, Poland"
+        );
     }
 
     #[test]
