@@ -19,7 +19,7 @@ fail-fast = false
 test-threads = 2
 
 [profile.ci.junit]
-path = "nextest-results.xml"
+path = "test.junit.xml"
 store-success-output = false
 store-failure-output = true
 
