@@ -16,7 +16,6 @@ help:
 setup: install-tools build
 
 install-tools:
-	rustup component add llvm-tools-preview --toolchain nightly
 	cargo install cargo-binstall
 	cargo binstall -y cargo-llvm-cov
 	cargo binstall -y --secure cargo-nextest
@@ -31,7 +30,7 @@ run:
 	cargo run
 
 test:
-	cargo nextest run
+	cargo llvm-cov nextest --all-features
 
 clean:
 	cargo clean
