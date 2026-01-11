@@ -8,6 +8,7 @@ Rust reimplementation of the CrossFit timetable service. It scrapes the CrossFit
 - **Week selection** (`weeks=1-6`, default=1) starting from the current week (Mondays only)
 - **HTML scraping** with `reqwest` + `scraper` for agenda data and location extraction
 - **iCal export** built with `icalendar` crate (timezone: Europe/Warsaw)
+- **X-APPLE-STRUCTURED-LOCATION support** for enhanced Apple Calendar features (maps, travel alerts, geofencing)
 - **OpenAPI/Swagger UI** documentation (enabled by default at `/docs`)
 - **Comprehensive test suite** covering parsing, authentication, and iCal generation
 
@@ -47,6 +48,12 @@ cargo test -- --nocapture
 - `APP_DEBUG` — Enable debug logging (default: `false`)
 - `APP_ENABLE_SWAGGER` — Enable OpenAPI/Swagger UI at `/docs` (default: `true`)
 - `APP_LOCATION` — Optional location string (if not set, fetched from the scraper for JSON endpoint; used for iCal if provided)
+
+### Gym Location Settings (for X-APPLE-STRUCTURED-LOCATION in iCal)
+- `APP_GYM_LATITUDE` — Gym latitude coordinate (default: `50.0386`)
+- `APP_GYM_LONGITUDE` — Gym longitude coordinate (default: `22.0026`)
+- `APP_GYM_TITLE` — Gym name for calendar entries (default: `CrossFit 2.0 Rzeszów`)
+- `APP_GYM_LOCATION` — Full gym address (default: `Boya-Żeleńskiego 15, 35-105 Rzeszów, Poland`)
 
 ## API
 
@@ -89,6 +96,24 @@ All authenticated routes accept either `Authorization: Bearer <token>` header or
 - Content-Disposition: `attachment; filename=crossfit_timetable.ics`
 - Events default to 1 hour duration if not specified
 - Timezone: Europe/Warsaw
+- **Includes X-APPLE-STRUCTURED-LOCATION** for enhanced Apple Calendar features:
+  - Map integration showing gym location
+  - Travel time alerts
+  - Location-based notifications
+  - Geofencing (≈50 meter radius)
+
+Example iCal event with X-APPLE-STRUCTURED-LOCATION:
+```ics
+BEGIN:VEVENT
+SUMMARY:CrossFit: WOD
+LOCATION:Boya-Żeleńskiego 15, 35-105 Rzeszów, Poland
+X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-ADDRESS="Boya-Żeleńskiego 15\n35
+ -105 Rzeszów\nPoland";X-APPLE-RADIUS=49.91;X-TITLE="CrossFit 2.0 Rzeszów
+ ":geo:50.0386,22.0026
+DTSTART:20251127T060000
+DTEND:20251127T070000
+END:VEVENT
+```
 
 ## Notes
 - Date validation: Only Mondays are supported; no data older than 2 weeks (14 days) in the past is fetched
@@ -96,6 +121,7 @@ All authenticated routes accept either `Authorization: Bearer <token>` header or
 - Timezone for iCal generation: Europe/Warsaw
 - The location is fetched from the scraper on each JSON request; for iCal, uses `APP_LOCATION` if set, otherwise fetches from scraper
 - All times are in the scheduler's configured timezone
+- **X-APPLE-STRUCTURED-LOCATION**: Apple-specific proprietary extension (not part of RFC 5545 standard). May not be recognized by non-Apple calendar applications. Coordinates are hardcoded per-gym configuration.
 
 ## License
 MIT
