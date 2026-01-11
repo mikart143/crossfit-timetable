@@ -7,9 +7,9 @@ use crossfit_timetable::scraper::CrossfitScraper;
 use crossfit_timetable::settings::Settings;
 use crossfit_timetable::{AppState, build_router};
 use httpmock::prelude::*;
-use url::Url;
 use std::sync::Arc;
 use tower::Service;
+use url::Url;
 
 /// Helper function to create test app state with mocked server
 fn create_test_state(mock_server_url: Url) -> AppState {

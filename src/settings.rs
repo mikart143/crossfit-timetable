@@ -122,7 +122,10 @@ mod tests {
         };
 
         // Assert struct fields work as expected
-        assert_eq!(settings.scraper_base_url, Url::parse("https://example.com").unwrap());
+        assert_eq!(
+            settings.scraper_base_url,
+            Url::parse("https://example.com").unwrap()
+        );
         assert!(settings.debug);
         assert_eq!(settings.auth_token, "test-token-123");
         assert!(settings.enable_swagger);

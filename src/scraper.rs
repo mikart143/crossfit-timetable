@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
 use chrono::{Datelike, NaiveDate, NaiveDateTime, NaiveTime};
-use url::Url;
 use regex::Regex;
 use scraper::{Html, Selector};
 use thiserror::Error;
+use url::Url;
 
 use crate::models::ClassItem;
 
@@ -81,7 +81,12 @@ impl CrossfitScraper {
     }
 
     async fn fetch_html(&self, url: &Url) -> Result<String, ScrapeError> {
-        let response = self.client.get(url.as_str()).send().await?.error_for_status()?;
+        let response = self
+            .client
+            .get(url.as_str())
+            .send()
+            .await?
+            .error_for_status()?;
         let body = response.text().await?;
         Ok(body)
     }
@@ -133,7 +138,8 @@ impl CrossfitScraper {
         let url = Url::parse_with_params(
             &format!("{}/kalendarz-zajec", self.base_url),
             &[("day", monday.to_string()), ("view", "Agenda".to_string())],
-        ).unwrap();
+        )
+        .unwrap();
 
         let html = self.fetch_html(&url).await?;
         let loc = match location {
@@ -344,7 +350,12 @@ mod tests {
         "#;
         let monday = NaiveDate::from_ymd_opt(2025, 12, 15).unwrap();
         let result = scraper
-            .parse_timetable_html(html, monday, None, &Url::parse("https://example.com/kalendarz").unwrap())
+            .parse_timetable_html(
+                html,
+                monday,
+                None,
+                &Url::parse("https://example.com/kalendarz").unwrap(),
+            )
             .unwrap();
         assert_eq!(result.len(), 2);
         assert_eq!(result[0].event_name, "WOD");
