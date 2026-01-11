@@ -1,9 +1,10 @@
 use config::{Config, ConfigError, Environment};
 use serde::{Deserialize, Serialize};
+use url::Url;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Settings {
-    pub scraper_base_url: String,
+    pub scraper_base_url: Url,
     pub debug: bool,
     pub auth_token: String,
     pub enable_swagger: bool,
@@ -52,13 +53,15 @@ impl Settings {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
     use std::env;
 
     // Note: Environment variable tests use unsafe blocks because env::set_var and
-    // env::remove_var are marked unsafe in Rust 1.32+. These tests may have race
-    // conditions if run in parallel. Consider using `serial_test` crate if needed.
+    // env::remove_var are marked unsafe in Rust 1.32+. Using serial_test to prevent
+    // race conditions from parallel test execution.
 
     #[test]
+    #[serial]
     fn test_settings_with_defaults() {
         // Arrange - clear relevant env vars
         unsafe {
@@ -80,7 +83,7 @@ mod tests {
         // Assert - should use default values
         assert_eq!(
             settings.scraper_base_url,
-            "https://crossfit2-rzeszow.cms.efitness.com.pl"
+            Url::parse("https://crossfit2-rzeszow.cms.efitness.com.pl").unwrap()
         );
         assert!(!settings.debug);
         assert_eq!(settings.auth_token, "default-token-change-me");
@@ -97,6 +100,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_settings_with_environment_variables() {
         // This test verifies Settings can load from environment variables
         // Note: Environment variable testing is tricky because the config library
@@ -105,7 +109,7 @@ mod tests {
 
         // Create a Settings struct directly to verify the fields
         let settings = Settings {
-            scraper_base_url: "https://example.com".to_string(),
+            scraper_base_url: Url::parse("https://example.com").unwrap(),
             debug: true,
             auth_token: "test-token-123".to_string(),
             enable_swagger: true,
@@ -118,7 +122,7 @@ mod tests {
         };
 
         // Assert struct fields work as expected
-        assert_eq!(settings.scraper_base_url, "https://example.com");
+        assert_eq!(settings.scraper_base_url, Url::parse("https://example.com").unwrap());
         assert!(settings.debug);
         assert_eq!(settings.auth_token, "test-token-123");
         assert!(settings.enable_swagger);
@@ -134,7 +138,22 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_settings_boolean_parsing() {
+        // Cleanup - clear all relevant env vars first to ensure clean state
+        unsafe {
+            env::remove_var("APP_DEBUG");
+            env::remove_var("APP_ENABLE_SWAGGER");
+            env::remove_var("APP_SCRAPER_BASE_URL");
+            env::remove_var("APP_AUTH_TOKEN");
+            env::remove_var("APP_PORT");
+            env::remove_var("APP_LOCATION");
+            env::remove_var("APP_GYM_LATITUDE");
+            env::remove_var("APP_GYM_LONGITUDE");
+            env::remove_var("APP_GYM_TITLE");
+            env::remove_var("APP_GYM_LOCATION");
+        }
+
         // Test true
         unsafe {
             env::set_var("APP_DEBUG", "true");
@@ -164,7 +183,22 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_settings_port_parsing() {
+        // Cleanup - clear all relevant env vars first to ensure clean state
+        unsafe {
+            env::remove_var("APP_DEBUG");
+            env::remove_var("APP_ENABLE_SWAGGER");
+            env::remove_var("APP_SCRAPER_BASE_URL");
+            env::remove_var("APP_AUTH_TOKEN");
+            env::remove_var("APP_PORT");
+            env::remove_var("APP_LOCATION");
+            env::remove_var("APP_GYM_LATITUDE");
+            env::remove_var("APP_GYM_LONGITUDE");
+            env::remove_var("APP_GYM_TITLE");
+            env::remove_var("APP_GYM_LOCATION");
+        }
+
         // Arrange
         unsafe {
             env::set_var("APP_PORT", "3000");

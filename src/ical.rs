@@ -91,12 +91,13 @@ impl ICalExporter {
 #[cfg(test)]
 mod tests {
     use chrono::NaiveDateTime;
+    use url::Url;
 
     use super::*;
 
     fn create_test_settings() -> Settings {
         Settings {
-            scraper_base_url: "https://example.com".to_string(),
+            scraper_base_url: Url::parse("https://example.com").unwrap(),
             debug: false,
             auth_token: "test".to_string(),
             enable_swagger: true,

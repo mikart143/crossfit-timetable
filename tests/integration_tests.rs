@@ -7,11 +7,12 @@ use crossfit_timetable::scraper::CrossfitScraper;
 use crossfit_timetable::settings::Settings;
 use crossfit_timetable::{AppState, build_router};
 use httpmock::prelude::*;
+use url::Url;
 use std::sync::Arc;
 use tower::Service;
 
 /// Helper function to create test app state with mocked server
-fn create_test_state(mock_server_url: String) -> AppState {
+fn create_test_state(mock_server_url: Url) -> AppState {
     let settings = Settings {
         scraper_base_url: mock_server_url.clone(),
         debug: true,
@@ -41,7 +42,7 @@ async fn response_body_string(body: Body) -> String {
 #[tokio::test]
 async fn test_root_endpoint() {
     // Arrange
-    let state = create_test_state("http://example.com".to_string());
+    let state = create_test_state(Url::parse("http://example.com").unwrap());
     let mut app = build_router(state);
 
     // Act
@@ -62,7 +63,7 @@ async fn test_root_endpoint() {
 #[tokio::test]
 async fn test_healthz_ready() {
     // Arrange
-    let state = create_test_state("http://example.com".to_string());
+    let state = create_test_state(Url::parse("http://example.com").unwrap());
     let mut app = build_router(state);
 
     // Act
@@ -86,7 +87,7 @@ async fn test_healthz_ready() {
 #[tokio::test]
 async fn test_healthz_live() {
     // Arrange
-    let state = create_test_state("http://example.com".to_string());
+    let state = create_test_state(Url::parse("http://example.com").unwrap());
     let mut app = build_router(state);
 
     // Act
@@ -110,7 +111,7 @@ async fn test_healthz_live() {
 #[tokio::test]
 async fn test_timetable_no_auth_token() {
     // Arrange
-    let state = create_test_state("http://example.com".to_string());
+    let state = create_test_state(Url::parse("http://example.com").unwrap());
     let mut app = build_router(state);
 
     // Act
@@ -131,7 +132,7 @@ async fn test_timetable_no_auth_token() {
 #[tokio::test]
 async fn test_timetable_invalid_auth_token() {
     // Arrange
-    let state = create_test_state("http://example.com".to_string());
+    let state = create_test_state(Url::parse("http://example.com").unwrap());
     let mut app = build_router(state);
 
     // Act
@@ -153,7 +154,7 @@ async fn test_timetable_invalid_auth_token() {
 async fn test_timetable_valid_auth_bearer() {
     // Arrange
     let mock_server = MockServer::start();
-    let state = create_test_state(mock_server.base_url());
+    let state = create_test_state(Url::parse(&mock_server.base_url()).unwrap());
 
     // Mock the scraper response with empty classes (will result in 404)
     mock_server.mock(|when, then| {
@@ -184,7 +185,7 @@ async fn test_timetable_valid_auth_bearer() {
 async fn test_timetable_valid_auth_query() {
     // Arrange
     let mock_server = MockServer::start();
-    let state = create_test_state(mock_server.base_url());
+    let state = create_test_state(Url::parse(&mock_server.base_url()).unwrap());
 
     // Mock the scraper response
     mock_server.mock(|when, then| {
@@ -213,7 +214,7 @@ async fn test_timetable_valid_auth_query() {
 #[tokio::test]
 async fn test_timetable_invalid_weeks_param() {
     // Arrange
-    let state = create_test_state("http://example.com".to_string());
+    let state = create_test_state(Url::parse("http://example.com").unwrap());
     let mut app = build_router(state);
 
     // Act - weeks = 0 is invalid
@@ -234,7 +235,7 @@ async fn test_timetable_invalid_weeks_param() {
 #[tokio::test]
 async fn test_timetable_weeks_too_high() {
     // Arrange
-    let state = create_test_state("http://example.com".to_string());
+    let state = create_test_state(Url::parse("http://example.com").unwrap());
     let mut app = build_router(state);
 
     // Act - weeks = 7 is invalid (max is 6)
@@ -256,7 +257,7 @@ async fn test_timetable_weeks_too_high() {
 async fn test_timetable_with_single_class() {
     // Arrange
     let mock_server = MockServer::start();
-    let state = create_test_state(mock_server.base_url());
+    let state = create_test_state(Url::parse(&mock_server.base_url()).unwrap());
 
     // Get the current Monday
     use chrono::{Datelike, Duration as ChronoDuration, Local};
@@ -314,7 +315,7 @@ async fn test_timetable_with_single_class() {
 async fn test_timetable_with_multiple_classes() {
     // Arrange
     let mock_server = MockServer::start();
-    let state = create_test_state(mock_server.base_url());
+    let state = create_test_state(Url::parse(&mock_server.base_url()).unwrap());
 
     // Get the current Monday
     use chrono::{Datelike, Duration as ChronoDuration, Local};
@@ -380,7 +381,7 @@ async fn test_timetable_with_multiple_classes() {
 #[tokio::test]
 async fn test_ical_endpoint_no_auth() {
     // Arrange
-    let state = create_test_state("http://example.com".to_string());
+    let state = create_test_state(Url::parse("http://example.com").unwrap());
     let mut app = build_router(state);
 
     // Act
@@ -402,7 +403,7 @@ async fn test_ical_endpoint_no_auth() {
 async fn test_ical_endpoint_empty_classes() {
     // Arrange
     let mock_server = MockServer::start();
-    let state = create_test_state(mock_server.base_url());
+    let state = create_test_state(Url::parse(&mock_server.base_url()).unwrap());
 
     // Mock empty response
     mock_server.mock(|when, then| {
@@ -432,7 +433,7 @@ async fn test_ical_endpoint_empty_classes() {
 async fn test_ical_endpoint_with_classes() {
     // Arrange
     let mock_server = MockServer::start();
-    let state = create_test_state(mock_server.base_url());
+    let state = create_test_state(Url::parse(&mock_server.base_url()).unwrap());
 
     // Get the current Monday
     use chrono::{Datelike, Duration as ChronoDuration, Local};
@@ -505,7 +506,7 @@ async fn test_ical_endpoint_with_classes() {
 async fn test_ical_endpoint_multiple_weeks() {
     // Arrange
     let mock_server = MockServer::start();
-    let state = create_test_state(mock_server.base_url());
+    let state = create_test_state(Url::parse(&mock_server.base_url()).unwrap());
 
     // Get the current Monday
     use chrono::{Datelike, Duration as ChronoDuration, Local};

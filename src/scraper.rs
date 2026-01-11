@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use chrono::{Datelike, NaiveDate, NaiveDateTime, NaiveTime};
+use url::Url;
 use regex::Regex;
 use scraper::{Html, Selector};
 use thiserror::Error;
@@ -22,15 +23,15 @@ pub enum ScrapeError {
 #[derive(Clone)]
 pub struct CrossfitScraper {
     client: reqwest::Client,
-    base_url: Arc<String>,
+    base_url: Arc<Url>,
     date_regex: Regex,
 }
 
 impl CrossfitScraper {
-    pub fn new(base_url: impl Into<String>) -> Self {
+    pub fn new(base_url: Url) -> Self {
         Self {
             client: reqwest::Client::new(),
-            base_url: Arc::new(base_url.into()),
+            base_url: Arc::new(base_url),
             date_regex: Regex::new(r"\d{4}-\d{2}-\d{2}").expect("regex compiles"),
         }
     }
@@ -79,8 +80,8 @@ impl CrossfitScraper {
         NaiveDate::parse_from_str(caps.as_str(), "%Y-%m-%d").ok()
     }
 
-    async fn fetch_html(&self, url: &str) -> Result<String, ScrapeError> {
-        let response = self.client.get(url).send().await?.error_for_status()?;
+    async fn fetch_html(&self, url: &Url) -> Result<String, ScrapeError> {
+        let response = self.client.get(url.as_str()).send().await?.error_for_status()?;
         let body = response.text().await?;
         Ok(body)
     }
@@ -128,10 +129,12 @@ impl CrossfitScraper {
         location: Option<String>,
     ) -> Result<Vec<ClassItem>, ScrapeError> {
         let monday = Self::get_valid_monday(start_date)?;
-        let url = format!(
-            "{}/kalendarz-zajec?day={}&view=Agenda",
-            self.base_url, monday
-        );
+
+        let url = Url::parse_with_params(
+            &format!("{}/kalendarz-zajec", self.base_url),
+            &[("day", monday.to_string()), ("view", "Agenda".to_string())],
+        ).unwrap();
+
         let html = self.fetch_html(&url).await?;
         let loc = match location {
             Some(loc) => Some(loc),
@@ -145,7 +148,7 @@ impl CrossfitScraper {
         html: &str,
         expected_monday: NaiveDate,
         location: Option<String>,
-        source_url: &str,
+        source_url: &Url,
     ) -> Result<Vec<ClassItem>, ScrapeError> {
         let document = Html::parse_document(html);
         let table_sel = Selector::parse("table.calendar_table_agenda").unwrap();
@@ -299,7 +302,7 @@ mod tests {
 
     #[test]
     fn test_parse_time_range() {
-        let scraper = CrossfitScraper::new("https://example.com");
+        let scraper = CrossfitScraper::new(Url::parse("https://example.com").unwrap());
         assert_eq!(scraper.parse_time_range("06:00 - 07:00"), Some(60));
         assert_eq!(scraper.parse_time_range("18:00-19:30"), Some(90));
         assert_eq!(scraper.parse_time_range("invalid"), None);
@@ -307,7 +310,7 @@ mod tests {
 
     #[test]
     fn test_parse_agenda_date() {
-        let scraper = CrossfitScraper::new("https://example.com");
+        let scraper = CrossfitScraper::new(Url::parse("https://example.com").unwrap());
         let parsed = scraper.parse_agenda_date("Pn, 2025-11-24");
         assert_eq!(parsed, Some(NaiveDate::from_ymd_opt(2025, 11, 24).unwrap()));
         assert!(scraper.parse_agenda_date("no date").is_none());
@@ -315,7 +318,7 @@ mod tests {
 
     #[test]
     fn test_parse_timetable_html() {
-        let scraper = CrossfitScraper::new("https://example.com");
+        let scraper = CrossfitScraper::new(Url::parse("https://example.com").unwrap());
         let html = r#"
         <html>
         <body>
@@ -341,7 +344,7 @@ mod tests {
         "#;
         let monday = NaiveDate::from_ymd_opt(2025, 12, 15).unwrap();
         let result = scraper
-            .parse_timetable_html(html, monday, None, "https://example.com/kalendarz")
+            .parse_timetable_html(html, monday, None, &Url::parse("https://example.com/kalendarz").unwrap())
             .unwrap();
         assert_eq!(result.len(), 2);
         assert_eq!(result[0].event_name, "WOD");

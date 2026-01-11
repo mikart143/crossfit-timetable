@@ -22,12 +22,14 @@ pub fn verify_token(
 
 #[cfg(test)]
 mod tests {
+    use url::Url;
+
     use super::*;
 
     #[test]
     fn test_verify_token_header() {
         let settings = Settings {
-            scraper_base_url: "https://example.com".to_string(),
+            scraper_base_url: Url::parse("https://example.com").unwrap(),
             debug: false,
             auth_token: "secret".to_string(),
             enable_swagger: true,
@@ -45,7 +47,7 @@ mod tests {
     #[test]
     fn test_verify_token_query() {
         let settings = Settings {
-            scraper_base_url: "https://example.com".to_string(),
+            scraper_base_url: Url::parse("https://example.com").unwrap(),
             debug: false,
             auth_token: "secret".to_string(),
             enable_swagger: true,

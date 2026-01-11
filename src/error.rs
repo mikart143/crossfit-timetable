@@ -1,25 +1,31 @@
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
+use thiserror::Error;
 use tracing::error;
 
 use crate::scraper::ScrapeError;
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum ApiError {
+    #[error("Unauthorized: {0}")]
     Unauthorized(String),
+    #[error("Bad request: {0}")]
     BadRequest(String),
+    #[error("Not found: {0}")]
     NotFound(String),
+    #[error("Internal error: {0}")]
     Internal(String),
 }
 
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
-        match self {
-            ApiError::Unauthorized(msg) => (StatusCode::UNAUTHORIZED, msg).into_response(),
-            ApiError::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg).into_response(),
-            ApiError::NotFound(msg) => (StatusCode::NOT_FOUND, msg).into_response(),
-            ApiError::Internal(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg).into_response(),
-        }
+        let status = match self {
+            ApiError::Unauthorized(_) => StatusCode::UNAUTHORIZED,
+            ApiError::BadRequest(_) => StatusCode::BAD_REQUEST,
+            ApiError::NotFound(_) => StatusCode::NOT_FOUND,
+            ApiError::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
+        };
+        (status, self.to_string()).into_response()
     }
 }
 
