@@ -1,0 +1,70 @@
+# This configuration file defines checks performed by cargo-deny
+# See: https://embarkstudios.github.io/cargo-deny/
+
+# Advisories check configuration
+# Checks for security vulnerabilities reported in the RustSec Advisory Database
+[advisories]
+version = 2
+db-path = "~/.cargo/advisory-db"
+db-urls = ["https://github.com/rustsec/advisory-db"]
+ignore = []
+# Set to "deny" to fail on security vulnerabilities
+vulnerability = "deny"
+# Set to "deny" to fail on unmaintained crates
+unmaintained = "warn"
+# Set to "deny" to fail on yanked crates
+yanked = "deny"
+# Set to "deny" to fail on notices
+notice = "warn"
+
+# Licenses check configuration
+# Ensures all dependencies use acceptable licenses
+[licenses]
+version = 2
+# List of allowed licenses
+# Common open-source licenses used in the Rust ecosystem
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-DFS-2016",
+    "Unlicense",
+    "CC0-1.0",
+    "0BSD",
+    "Zlib",
+]
+# Set to "deny" to fail on licenses not in the allow list
+unlicensed = "deny"
+# Allow OSI and FSF approved licenses
+allow-osi-fsf-free = "both"
+# Set confidence threshold for license detection
+confidence-threshold = 0.8
+# Exceptions for specific crates (if needed)
+exceptions = []
+
+# Bans check configuration
+# Checks for specific crates that should not be used
+[bans]
+multiple-versions = "warn"
+wildcards = "allow"
+highlight = "all"
+workspace-default-features = "allow"
+external-default-features = "allow"
+# Allow certain crates to have multiple versions if needed
+# This is common in the Rust ecosystem during transition periods
+skip = []
+# Skip checking for certain trees to reduce noise from test dependencies
+skip-tree = []
+# Deny specific crates
+deny = []
+
+# Sources check configuration
+# Ensures dependencies come from trusted sources
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []
