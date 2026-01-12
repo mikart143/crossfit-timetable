@@ -28,4 +28,3 @@ jobs:
         with:
           log-level: warn
           command: check
-          arguments: --all-features
