@@ -34,4 +34,4 @@ url = { version = "2.5.8", features = ["serde"] }
 
 [dev-dependencies]
 httpmock = "0.8.2"
-serial_test = "3.0"
+serial_test = "3.4"
